@@ -91,7 +91,7 @@ const EntityMesh = ({
   const isBuilding = data.type === 'Building';
 
   const baseColor = useMemo(() => {
-    if (isRoad) return '#222';
+    if (isRoad) return isSelected ? '#ff9800' : '#222';
     if (isVegetation) return '#7ED321';
     if (isPlot) return '#f5f5f5';
     if (colorMode === 'USE') {
@@ -128,7 +128,7 @@ const EntityMesh = ({
     }
 
     return '#fff';
-  }, [data.landUseExisting, data.floors, data.setback, colorMode, isRoad]);
+  }, [data.landUseExisting, data.floors, data.setback, colorMode, isRoad, isPlot, isVegetation, isSelected]);
 
   const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
@@ -153,16 +153,18 @@ const EntityMesh = ({
 
   const canSelectPlot = selectionFilter === 'AUTO' || selectionFilter === 'PLOTS';
   const canSelectBuilding = selectionFilter === 'AUTO' || selectionFilter === 'BUILDINGS';
+  const canSelectRoad = selectionFilter === 'AUTO' || selectionFilter === 'ROADS';
 
   const handleClick = (event) => {
     event.stopPropagation();
     if (isBuilding && !canSelectBuilding) return;
     if (isPlot && !canSelectPlot) return;
+    if (isRoad && !canSelectRoad) return;
 
     if (isBuilding && selectionMode === 'BLOCK') {
       const islandIds = findIsland(data.id, buildings);
       onBlockSelect(islandIds);
-    } else if (isBuilding || isPlot) {
+    } else if (isBuilding || isPlot || isRoad) {
       onToggle(data.id, event.ctrlKey || event.metaKey);
     }
   };
@@ -177,8 +179,8 @@ const EntityMesh = ({
         onPointerOut={() => (document.body.style.cursor = 'auto')}
       >
         <shapeGeometry args={[plotShape]} />
-        <meshBasicMaterial color="#000" transparent opacity={0.05} />
-        <Edges color="#ccc" threshold={15} />
+        <meshBasicMaterial color={isSelected ? '#ff9800' : '#000'} transparent opacity={isSelected ? 0.2 : 0.05} />
+        <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
       </mesh>
 
       {!isPlot && (
@@ -188,7 +190,10 @@ const EntityMesh = ({
           receiveShadow
           castShadow
           onClick={handleClick}
-          onPointerOver={() => isBuilding && canSelectBuilding && (document.body.style.cursor = 'pointer')}
+          onPointerOver={() =>
+            (isBuilding && canSelectBuilding && (document.body.style.cursor = 'pointer')) ||
+            (isRoad && canSelectRoad && (document.body.style.cursor = 'pointer'))
+          }
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />

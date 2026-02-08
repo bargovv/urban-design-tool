@@ -40,9 +40,9 @@ export default function PropertiesPanel() {
         <Settings2 size={18} /> Properties
       </h3>
       {selectedIds.length === 0 ? (
-        <div className="panel-empty">Select plots or buildings to edit</div>
+        <div className="panel-empty">Select plots, roads, or buildings to edit</div>
       ) : selectedBuildings.length === 0 ? (
-        <div className="panel-empty">Plots selected. Select buildings to edit building properties.</div>
+        <div className="panel-empty">Plots or roads selected. Select buildings to edit building properties.</div>
       ) : (
         <div className="panel-content">
           <div className="panel-highlight">{selectedBuildings.length} Building(s) Selected</div>

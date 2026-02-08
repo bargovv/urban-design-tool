@@ -91,6 +91,7 @@ export default function TopBar() {
           <option value="AUTO">Select: Auto</option>
           <option value="BUILDINGS">Select: Buildings</option>
           <option value="PLOTS">Select: Plots</option>
+          <option value="ROADS">Select: Roads</option>
         </select>
         <button
           type="button"
