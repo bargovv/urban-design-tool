@@ -17,7 +17,20 @@ const Section = ({ title, children }) => (
 
 export default function PropertiesPanel() {
   const selectedIds = useUrbanStore((state) => state.selectedIds);
+  const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
+  const selectedBuildings = buildings.filter((building) => selectedIds.includes(building.id));
+
+  const getSharedValue = (key) => {
+    if (selectedBuildings.length === 0) return '';
+    const [first, ...rest] = selectedBuildings;
+    const shared = rest.every((building) => building[key] === first[key]);
+    return shared ? first[key] : '';
+  };
+
+  const sharedFloors = getSharedValue('floors');
+  const sharedLandUse = getSharedValue('landUseExisting');
+  const sharedSetback = getSharedValue('setback');
 
   return (
     <div className="panel properties">
@@ -35,11 +48,22 @@ export default function PropertiesPanel() {
                 type="number"
                 className="input"
                 placeholder="2"
-                onChange={(event) => updateSelection('floors', Number(event.target.value))}
+                value={sharedFloors}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  updateSelection('floors', nextValue === '' ? 0 : Number(nextValue));
+                }}
               />
             </Field>
             <Field label="Land Use">
-              <select className="input" onChange={(event) => updateSelection('landUseExisting', event.target.value)}>
+              <select
+                className="input"
+                value={sharedLandUse}
+                onChange={(event) => updateSelection('landUseExisting', event.target.value)}
+              >
+                <option value="" disabled>
+                  Mixed selection
+                </option>
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
                 <option value="Industrial">Industrial</option>
@@ -47,7 +71,14 @@ export default function PropertiesPanel() {
               </select>
             </Field>
             <Field label="Setback">
-              <select className="input" onChange={(event) => updateSelection('setback', event.target.value)}>
+              <select
+                className="input"
+                value={sharedSetback}
+                onChange={(event) => updateSelection('setback', event.target.value)}
+              >
+                <option value="" disabled>
+                  Mixed selection
+                </option>
                 <option value="Nil">Nil</option>
                 <option value="Minimum">Minimum</option>
                 <option value="Medium">Medium</option>
