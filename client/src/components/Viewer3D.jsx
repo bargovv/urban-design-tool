@@ -80,6 +80,7 @@ const EntityMesh = ({
   onToggle,
   isSelected,
   selectionMode,
+  selectionFilter,
   buildings,
   onBlockSelect,
   colorMode
@@ -150,20 +151,31 @@ const EntityMesh = ({
     return getScaledShape(data.shape, factor);
   }, [data.shape, data.setback, isRoad, isPlot, isVegetation]);
 
+  const canSelectPlot = selectionFilter === 'AUTO' || selectionFilter === 'PLOTS';
+  const canSelectBuilding = selectionFilter === 'AUTO' || selectionFilter === 'BUILDINGS';
+
   const handleClick = (event) => {
     event.stopPropagation();
-    if (!isBuilding) return;
-    if (selectionMode === 'BLOCK') {
+    if (isBuilding && !canSelectBuilding) return;
+    if (isPlot && !canSelectPlot) return;
+
+    if (isBuilding && selectionMode === 'BLOCK') {
       const islandIds = findIsland(data.id, buildings);
       onBlockSelect(islandIds);
-    } else {
+    } else if (isBuilding || isPlot) {
       onToggle(data.id, event.ctrlKey || event.metaKey);
     }
   };
 
   return (
     <group>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        position={[0, 0.02, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        onClick={isPlot ? handleClick : undefined}
+        onPointerOver={() => isPlot && canSelectPlot && (document.body.style.cursor = 'pointer')}
+        onPointerOut={() => (document.body.style.cursor = 'auto')}
+      >
         <shapeGeometry args={[plotShape]} />
         <meshBasicMaterial color="#000" transparent opacity={0.05} />
         <Edges color="#ccc" threshold={15} />
@@ -176,7 +188,7 @@ const EntityMesh = ({
           receiveShadow
           castShadow
           onClick={handleClick}
-          onPointerOver={() => isBuilding && (document.body.style.cursor = 'pointer')}
+          onPointerOver={() => isBuilding && canSelectBuilding && (document.body.style.cursor = 'pointer')}
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
@@ -199,6 +211,7 @@ export default function Viewer3D({
   onClearSelection,
   viewMode,
   selectionMode,
+  selectionFilter,
   onBlockSelect,
   colorMode
 }) {
@@ -224,6 +237,7 @@ export default function Viewer3D({
             isSelected={selectedIds.includes(building.id)}
             onToggle={onToggleSelection}
             selectionMode={selectionMode}
+            selectionFilter={selectionFilter}
             buildings={buildings}
             onBlockSelect={onBlockSelect}
             colorMode={colorMode}

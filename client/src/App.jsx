@@ -11,6 +11,7 @@ export default function App() {
   const buildings = useUrbanStore((state) => state.buildings);
   const selectedIds = useUrbanStore((state) => state.selectedIds);
   const selectionMode = useUrbanStore((state) => state.selectionMode);
+  const selectionFilter = useUrbanStore((state) => state.selectionFilter);
   const viewMode = useUrbanStore((state) => state.viewMode);
   const analysisTab = useUrbanStore((state) => state.analysisTab);
   const colorMode = useUrbanStore((state) => state.colorMode);
@@ -39,6 +40,7 @@ export default function App() {
             onClearSelection={clearSelection}
             viewMode={viewMode}
             selectionMode={selectionMode}
+            selectionFilter={selectionFilter}
             onBlockSelect={blockSelect}
             colorMode={colorMode}
           />

@@ -42,6 +42,13 @@ export default function InsightsPanel({ stats, analysisTab }) {
             <KPI label="Residents" value={Math.round(stats.residents)} unit="ppl" color="#2e7d32" />
             <KPI label="Jobs" value={Math.round(stats.jobs)} unit="jobs" color="#1565c0" />
             <KPI label="Plot Area" value={(stats.plotArea / 1000).toFixed(1)} unit="k m²" />
+            <KPI label="Road Area" value={(stats.roadArea / 1000).toFixed(1)} unit="k m²" />
+            <KPI
+              label="City Area"
+              value={((stats.plotArea + stats.roadArea) / 1000).toFixed(1)}
+              unit="k m²"
+            />
+            <KPI label="Built-up Area" value={(stats.gfa / 1000).toFixed(1)} unit="k m²" />
             <KPI
               label="Private/Public"
               value={stats.privatePublicRatio ? stats.privatePublicRatio.toFixed(2) : '—'}

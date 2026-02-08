@@ -8,9 +8,11 @@ export default function TopBar() {
   const projectInputRef = useRef(null);
   const setBuildings = useUrbanStore((state) => state.setBuildings);
   const selectionMode = useUrbanStore((state) => state.selectionMode);
+  const selectionFilter = useUrbanStore((state) => state.selectionFilter);
   const viewMode = useUrbanStore((state) => state.viewMode);
   const colorMode = useUrbanStore((state) => state.colorMode);
   const setSelectionMode = useUrbanStore((state) => state.setSelectionMode);
+  const setSelectionFilter = useUrbanStore((state) => state.setSelectionFilter);
   const setViewMode = useUrbanStore((state) => state.setViewMode);
   const setColorMode = useUrbanStore((state) => state.setColorMode);
 
@@ -80,6 +82,15 @@ export default function TopBar() {
           <option value="HEIGHT">View: Height</option>
           <option value="FAR">View: Density</option>
           <option value="ENERGY">View: Energy</option>
+        </select>
+        <select
+          className="topbar-select"
+          value={selectionFilter}
+          onChange={(event) => setSelectionFilter(event.target.value)}
+        >
+          <option value="AUTO">Select: Auto</option>
+          <option value="BUILDINGS">Select: Buildings</option>
+          <option value="PLOTS">Select: Plots</option>
         </select>
         <button
           type="button"
