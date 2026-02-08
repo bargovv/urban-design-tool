@@ -13,7 +13,8 @@ export const parseDxfData = (dxfString) => {
     dxf.entities.forEach((entity) => {
       if (entity.type === 'LWPOLYLINE' || entity.type === 'POLYLINE') {
         const layerName = (entity.layer || 'Unknown').toUpperCase().trim();
-        if (layerName !== 'ROAD' && layerName !== 'PLOTS') return;
+        const supportedLayers = new Set(['ROAD', 'PLOTS', 'BUILDINGS', 'VEGETATION']);
+        if (!supportedLayers.has(layerName)) return;
 
         const shapePoints = entity.vertices.map((vertex) => ({
           x: vertex.x * SCALE_FACTOR,
@@ -21,19 +22,24 @@ export const parseDxfData = (dxfString) => {
         }));
         allPoints = allPoints.concat(shapePoints);
         const isRoad = layerName === 'ROAD';
+        const isPlot = layerName === 'PLOTS';
+        const isBuilding = layerName === 'BUILDINGS';
+        const isVegetation = layerName === 'VEGETATION';
+        const type = isRoad ? 'Road' : isPlot ? 'Plot' : isBuilding ? 'Building' : 'Vegetation';
+        const defaultLandUse = isRoad ? 'Road' : isVegetation ? 'Vegetation' : 'Residential';
 
         entities.push({
           id: uuidv4(),
           originalShape: shapePoints,
           layer: layerName,
-          type: isRoad ? 'Road' : 'Building',
-          floors: isRoad ? 0 : 2,
+          type,
+          floors: isRoad || isPlot || isVegetation ? 0 : 2,
           floorHeight: 3.0,
-          height: isRoad ? 0.1 : 6,
+          height: isRoad ? 0.1 : isVegetation ? 0.2 : 6,
           setback: 'Nil',
-          landUseCDP: isRoad ? 'Road' : 'Residential',
+          landUseCDP: defaultLandUse,
           subLandUseCDP: '',
-          landUseExisting: isRoad ? 'Road' : 'Residential',
+          landUseExisting: defaultLandUse,
           subLandUseExisting: '',
           subTypology1: '',
           subTypology2: '',

@@ -19,7 +19,9 @@ export default function PropertiesPanel() {
   const selectedIds = useUrbanStore((state) => state.selectedIds);
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
-  const selectedBuildings = buildings.filter((building) => selectedIds.includes(building.id));
+  const selectedBuildings = buildings.filter(
+    (building) => building.type === 'Building' && selectedIds.includes(building.id)
+  );
 
   const getSharedValue = (key) => {
     if (selectedBuildings.length === 0) return '';

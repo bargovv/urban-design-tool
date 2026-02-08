@@ -17,8 +17,13 @@ const calculateArea = (points) => {
 };
 
 export const calculateStats = ({ buildings, selectedIds }) => {
+  const plotAreas = buildings.filter((building) => building.type === 'Plot');
+  const roadAreas = buildings.filter((building) => building.type === 'Road');
+  const builtAreas = buildings.filter((building) => building.type === 'Building');
   const subset =
-    selectedIds.length > 0 ? buildings.filter((building) => selectedIds.includes(building.id)) : buildings;
+    selectedIds.length > 0
+      ? builtAreas.filter((building) => selectedIds.includes(building.id))
+      : builtAreas;
   const data = {
     gfa: 0,
     far: 0,
@@ -28,15 +33,25 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     energy: 0,
     water: 0,
     parking: 0,
-    waste: 0
+    waste: 0,
+    plotArea: 0,
+    roadArea: 0,
+    privatePublicRatio: 0
   };
   const typeMap = {};
-  let totalSiteArea = 0;
+  let totalPlotArea = 0;
+  let totalRoadArea = 0;
+
+  plotAreas.forEach((plot) => {
+    totalPlotArea += calculateArea(plot.shape);
+  });
+
+  roadAreas.forEach((road) => {
+    totalRoadArea += calculateArea(road.shape);
+  });
 
   subset.forEach((building) => {
-    if (building.type === 'Road') return;
     const area = calculateArea(building.shape);
-    totalSiteArea += area;
 
     let coverage = 1.0;
     if (building.setback === 'Minimum') coverage = 0.95;
@@ -61,7 +76,10 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     data.parking += gfa / metrics.parking;
   });
 
-  data.far = totalSiteArea > 0 ? (data.gfa / totalSiteArea).toFixed(2) : 0;
+  data.far = totalPlotArea > 0 ? (data.gfa / totalPlotArea).toFixed(2) : 0;
+  data.plotArea = totalPlotArea;
+  data.roadArea = totalRoadArea;
+  data.privatePublicRatio = totalRoadArea > 0 ? totalPlotArea / totalRoadArea : 0;
   data.landUse = Object.keys(typeMap).map((key, index) => ({
     name: key,
     value: Math.round(typeMap[key]),

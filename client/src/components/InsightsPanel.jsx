@@ -41,6 +41,12 @@ export default function InsightsPanel({ stats, analysisTab }) {
             <KPI label="Avg FAR" value={stats.far} unit="" />
             <KPI label="Residents" value={Math.round(stats.residents)} unit="ppl" color="#2e7d32" />
             <KPI label="Jobs" value={Math.round(stats.jobs)} unit="jobs" color="#1565c0" />
+            <KPI label="Plot Area" value={(stats.plotArea / 1000).toFixed(1)} unit="k m²" />
+            <KPI
+              label="Private/Public"
+              value={stats.privatePublicRatio ? stats.privatePublicRatio.toFixed(2) : '—'}
+              unit="ratio"
+            />
           </div>
           <div className="chart-card">
             <ResponsiveContainer width="100%" height="100%">

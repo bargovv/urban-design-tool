@@ -4,7 +4,7 @@ import { OrbitControls, OrthographicCamera, ContactShadows, Environment, Edges }
 import * as THREE from 'three';
 
 const findIsland = (startId, allBuildings) => {
-  const buildings = allBuildings.filter((building) => building.type !== 'Road');
+  const buildings = allBuildings.filter((building) => building.type === 'Building');
   const startNode = buildings.find((building) => building.id === startId);
   if (!startNode) return [startId];
   const island = new Set([startId]);
@@ -85,9 +85,14 @@ const EntityMesh = ({
   colorMode
 }) => {
   const isRoad = data.type === 'Road';
+  const isPlot = data.type === 'Plot';
+  const isVegetation = data.type === 'Vegetation';
+  const isBuilding = data.type === 'Building';
 
   const baseColor = useMemo(() => {
     if (isRoad) return '#222';
+    if (isVegetation) return '#7ED321';
+    if (isPlot) return '#f5f5f5';
     if (colorMode === 'USE') {
       switch (data.landUseExisting) {
         case 'Residential':
@@ -124,7 +129,7 @@ const EntityMesh = ({
     return '#fff';
   }, [data.landUseExisting, data.floors, data.setback, colorMode, isRoad]);
 
-  const currentHeight = isRoad ? 0.05 : data.floors * data.floorHeight;
+  const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
   const plotShape = useMemo(() => {
     const shape = new THREE.Shape();
@@ -137,17 +142,18 @@ const EntityMesh = ({
 
   const buildingShape = useMemo(() => {
     let factor = 1.0;
-    if (!isRoad) {
+    if (!isRoad && !isPlot && !isVegetation) {
       if (data.setback === 'Minimum') factor = 0.95;
       else if (data.setback === 'Medium') factor = 0.85;
       else if (data.setback === 'Large') factor = 0.75;
     }
     return getScaledShape(data.shape, factor);
-  }, [data.shape, data.setback, isRoad]);
+  }, [data.shape, data.setback, isRoad, isPlot, isVegetation]);
 
   const handleClick = (event) => {
     event.stopPropagation();
-    if (selectionMode === 'BLOCK' && !isRoad) {
+    if (!isBuilding) return;
+    if (selectionMode === 'BLOCK') {
       const islandIds = findIsland(data.id, buildings);
       onBlockSelect(islandIds);
     } else {
@@ -163,23 +169,25 @@ const EntityMesh = ({
         <Edges color="#ccc" threshold={15} />
       </mesh>
 
-      <mesh
-        position={[0, 0, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-        castShadow
-        onClick={handleClick}
-        onPointerOver={() => !isRoad && (document.body.style.cursor = 'pointer')}
-        onPointerOut={() => (document.body.style.cursor = 'auto')}
-      >
-        <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
-        {isSelected ? (
-          <meshPhysicalMaterial color="#EAFF00" emissive="#EAFF00" emissiveIntensity={0.5} transparent opacity={0.6} />
-        ) : (
-          <meshStandardMaterial color={baseColor} roughness={0.5} />
-        )}
-        <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
-      </mesh>
+      {!isPlot && (
+        <mesh
+          position={[0, 0, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+          castShadow
+          onClick={handleClick}
+          onPointerOver={() => isBuilding && (document.body.style.cursor = 'pointer')}
+          onPointerOut={() => (document.body.style.cursor = 'auto')}
+        >
+          <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
+          {isSelected ? (
+            <meshPhysicalMaterial color="#EAFF00" emissive="#EAFF00" emissiveIntensity={0.5} transparent opacity={0.6} />
+          ) : (
+            <meshStandardMaterial color={baseColor} roughness={0.5} />
+          )}
+          <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
+        </mesh>
+      )}
     </group>
   );
 };
