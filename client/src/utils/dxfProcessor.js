@@ -67,21 +67,35 @@ export const parseDxfData = (dxfString) => {
     }));
 
     const plots = centeredEntities.filter((entity) => entity.type === 'Plot');
+    if (plots.length === 0) {
+      return centeredEntities;
+    }
     const plotPolygons = plots.map((plot) => {
       const ring = plot.shape.length ? [...plot.shape, plot.shape[0]] : [];
-      return { plot, polygon: ring.length ? polygon([ring]) : null };
+      if (ring.length < 4) return { plot, polygon: null };
+      return { plot, polygon: polygon([ring]) };
     });
 
     const withPlotAssignments = centeredEntities.map((entity) => {
       if (entity.type !== 'Building') return entity;
       const buildingRing = entity.shape.length ? [...entity.shape, entity.shape[0]] : [];
-      if (!buildingRing.length) return { ...entity, plotId: null };
-      const buildingPolygon = polygon([buildingRing]);
+      if (buildingRing.length < 4) return { ...entity, plotId: null };
+      let buildingPolygon;
+      try {
+        buildingPolygon = polygon([buildingRing]);
+      } catch (error) {
+        return { ...entity, plotId: null };
+      }
       let bestPlotId = null;
       let bestArea = 0;
       plotPolygons.forEach(({ plot, polygon: plotPolygon }) => {
         if (!plotPolygon) return;
-        const overlap = intersect(plotPolygon, buildingPolygon);
+        let overlap = null;
+        try {
+          overlap = intersect(plotPolygon, buildingPolygon);
+        } catch (error) {
+          overlap = null;
+        }
         if (!overlap) return;
         const overlapArea = area(overlap);
         if (overlapArea > bestArea) {
