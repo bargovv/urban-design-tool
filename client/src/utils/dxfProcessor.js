@@ -1,4 +1,5 @@
 import DxfParser from 'dxf-parser';
+import { area, intersect, polygon } from '@turf/turf';
 import { v4 as uuidv4 } from 'uuid';
 
 const parser = new DxfParser();
@@ -60,10 +61,52 @@ export const parseDxfData = (dxfString) => {
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
-    return entities.map((building) => ({
+    const centeredEntities = entities.map((building) => ({
       ...building,
       shape: building.originalShape.map((point) => [point.x - centerX, point.y - centerY])
     }));
+
+    const plots = centeredEntities.filter((entity) => entity.type === 'Plot');
+    const plotPolygons = plots.map((plot) => {
+      const ring = plot.shape.length ? [...plot.shape, plot.shape[0]] : [];
+      return { plot, polygon: ring.length ? polygon([ring]) : null };
+    });
+
+    const withPlotAssignments = centeredEntities.map((entity) => {
+      if (entity.type !== 'Building') return entity;
+      const buildingRing = entity.shape.length ? [...entity.shape, entity.shape[0]] : [];
+      if (!buildingRing.length) return { ...entity, plotId: null };
+      const buildingPolygon = polygon([buildingRing]);
+      let bestPlotId = null;
+      let bestArea = 0;
+      plotPolygons.forEach(({ plot, polygon: plotPolygon }) => {
+        if (!plotPolygon) return;
+        const overlap = intersect(plotPolygon, buildingPolygon);
+        if (!overlap) return;
+        const overlapArea = area(overlap);
+        if (overlapArea > bestArea) {
+          bestArea = overlapArea;
+          bestPlotId = plot.id;
+        }
+      });
+      return { ...entity, plotId: bestPlotId };
+    });
+
+    const plotBuildingCounts = withPlotAssignments.reduce((acc, entity) => {
+      if (entity.type !== 'Building' || !entity.plotId) return acc;
+      acc[entity.plotId] = (acc[entity.plotId] || 0) + 1;
+      return acc;
+    }, {});
+
+    return withPlotAssignments.map((entity) => {
+      if (entity.type !== 'Plot') return entity;
+      const buildingCount = plotBuildingCounts[entity.id] || 0;
+      return {
+        ...entity,
+        buildingCount,
+        isEmptyPlot: buildingCount === 0
+      };
+    });
   } catch (error) {
     console.error('DXF Parsing Error:', error);
     return [];

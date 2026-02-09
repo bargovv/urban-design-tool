@@ -265,6 +265,11 @@ body {
   outline: none;
 }
 
+.input-static {
+  background: #f5f7fa;
+  color: #4b5563;
+}
+
 .insights {
   flex: 1;
   background: #f8f9fa;
