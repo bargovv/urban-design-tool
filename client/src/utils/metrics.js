@@ -1,4 +1,5 @@
 import { calculatePlanarArea } from './area.js';
+import { calculateBuildingGfa } from './far.js';
 
 const METRICS = {
   Residential: { pop: 35, energy: 150, water: 135, waste: 0.5, parking: 80 },
@@ -61,20 +62,8 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     totalRoadArea += road.areaSqm ?? calculatePlanarArea(road.shape);
   });
 
-  const computeBuildingGfa = (building) => {
-    const area = building.areaSqm ?? calculatePlanarArea(building.shape);
-
-    let coverage = 1.0;
-    if (building.setback === 'Minimum') coverage = 0.95;
-    else if (building.setback === 'Medium') coverage = 0.85;
-    else if (building.setback === 'Large') coverage = 0.75;
-
-    const footprint = area * coverage;
-    return footprint * building.floors;
-  };
-
   subset.forEach((building) => {
-    const gfa = computeBuildingGfa(building);
+    const gfa = calculateBuildingGfa(building);
     data.gfa += gfa;
 
     const useKey = building.landUseExisting || 'Residential';
@@ -95,7 +84,7 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     ? plotAreas.map((plot) => {
         const plotArea = plot.areaSqm ?? calculatePlanarArea(plot.shape);
         const relatedBuildings = allBuildings.filter((building) => building.plotId === plot.id);
-        const buildingGfa = relatedBuildings.reduce((sum, building) => sum + computeBuildingGfa(building), 0);
+        const buildingGfa = relatedBuildings.reduce((sum, building) => sum + calculateBuildingGfa(building), 0);
         return {
           id: plot.id,
           areaSqm: plotArea,

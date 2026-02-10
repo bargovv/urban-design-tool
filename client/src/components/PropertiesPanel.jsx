@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Settings2 } from 'lucide-react';
 import { formatArea } from '../utils/area.js';
 import { useUrbanStore } from '../store/useUrbanStore';
+import { buildFarMaps } from '../utils/far.js';
 
 const Field = ({ label, children }) => (
   <div className="field">
@@ -25,6 +27,15 @@ export default function PropertiesPanel() {
     (building) => building.type === 'Building' && selectedIds.includes(building.id)
   );
   const selectedPlots = buildings.filter((building) => building.type === 'Plot' && selectedIds.includes(building.id));
+
+
+  const farMaps = useMemo(() => buildFarMaps(buildings), [buildings]);
+  const selectedPlotFarValues = selectedPlots
+    .map((plot) => farMaps.plotFarById[plot.id])
+    .filter((value) => typeof value === 'number');
+  const selectedBuildingFarValues = selectedBuildings
+    .map((building) => farMaps.buildingFarById[building.id])
+    .filter((value) => typeof value === 'number');
 
   const plotAreas = selectedPlots.map((plot) => plot.areaSqm ?? 0);
   const totalPlotArea = plotAreas.reduce((sum, value) => sum + value, 0);
@@ -70,6 +81,13 @@ export default function PropertiesPanel() {
               <Field label="Total plot area">
                 <div className="input input-static">{totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}</div>
               </Field>
+              <Field label="Plot FAR (avg selected)">
+                <div className="input input-static">
+                  {selectedPlotFarValues.length > 0
+                    ? (selectedPlotFarValues.reduce((sum, value) => sum + value, 0) / selectedPlotFarValues.length).toFixed(2)
+                    : '—'}
+                </div>
+              </Field>
               {selectedPlots.some((plot) => plot.isEmptyPlot) && (
                 <button type="button" className="plot-action-btn" onClick={generateBuildingsFromSelectedEmptyPlots}>
                   Generate building for empty plot(s)
@@ -83,6 +101,13 @@ export default function PropertiesPanel() {
             <>
               <div className="panel-highlight">{selectedBuildings.length} Building(s) Selected</div>
               <Section title="1. Physical & Use">
+                <Field label="Building FAR (avg selected)">
+                  <div className="input input-static">
+                    {selectedBuildingFarValues.length > 0
+                      ? (selectedBuildingFarValues.reduce((sum, value) => sum + value, 0) / selectedBuildingFarValues.length).toFixed(2)
+                      : '—'}
+                  </div>
+                </Field>
                 <Field label="Floors">
                   <input
                     type="number"

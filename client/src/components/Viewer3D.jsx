@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, ContactShadows, Environment, Edges } from '@react-three/drei';
 import * as THREE from 'three';
+import { buildFarMaps } from '../utils/far.js';
 
 const findIsland = (startId, allBuildings) => {
   const buildings = allBuildings.filter((building) => building.type === 'Building');
@@ -83,7 +84,8 @@ const EntityMesh = ({
   selectionFilter,
   buildings,
   onBlockSelect,
-  colorMode
+  colorMode,
+  farMaps
 }) => {
   const isRoad = data.type === 'Road';
   const isPlot = data.type === 'Plot';
@@ -93,6 +95,15 @@ const EntityMesh = ({
   const baseColor = useMemo(() => {
     if (isRoad) return isSelected ? '#ff9800' : '#222';
     if (isVegetation) return '#7ED321';
+    if (colorMode === 'FAR') {
+      const plotFar = farMaps.plotFarById[data.id];
+      const buildingFar = farMaps.buildingFarById[data.id];
+      const farValue = isPlot ? plotFar : buildingFar;
+      if (typeof farValue === 'number') {
+        return getColorByValue(farValue, 0.0, 4.0, 120, 0);
+      }
+      return '#cccccc';
+    }
     if (isPlot) return '#f5f5f5';
     if (colorMode === 'USE') {
       switch (data.landUseExisting) {
@@ -112,14 +123,6 @@ const EntityMesh = ({
       const t = Math.min(1, data.floors / 12);
       return `hsl(220, ${50 + t * 50}%, ${90 - t * 60}%)`;
     }
-    if (colorMode === 'FAR') {
-      let coverage = 1.0;
-      if (data.setback === 'Minimum') coverage = 0.95;
-      if (data.setback === 'Medium') coverage = 0.85;
-      if (data.setback === 'Large') coverage = 0.75;
-      const far = data.floors * coverage;
-      return getColorByValue(far, 0.5, 4.0, 120, 0);
-    }
     if (colorMode === 'ENERGY') {
       let intensity = 150;
       if (data.landUseExisting === 'Commercial') intensity = 250;
@@ -128,7 +131,7 @@ const EntityMesh = ({
     }
 
     return '#fff';
-  }, [data.landUseExisting, data.floors, data.setback, colorMode, isRoad, isPlot, isVegetation, isSelected]);
+  }, [data.id, data.landUseExisting, data.floors, colorMode, farMaps, isRoad, isPlot, isVegetation, isSelected]);
 
   const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
@@ -220,6 +223,9 @@ export default function Viewer3D({
   onBlockSelect,
   colorMode
 }) {
+
+  const farMaps = useMemo(() => buildFarMaps(buildings), [buildings]);
+
   return (
     <div className="viewer-canvas">
       <Canvas shadows dpr={[1, 2]} onPointerMissed={onClearSelection}>
@@ -246,6 +252,7 @@ export default function Viewer3D({
             buildings={buildings}
             onBlockSelect={onBlockSelect}
             colorMode={colorMode}
+            farMaps={farMaps}
           />
         ))}
         <ContactShadows resolution={1024} scale={500} blur={2} opacity={0.4} color="#000" />
