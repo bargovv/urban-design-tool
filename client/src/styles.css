@@ -158,6 +158,14 @@ body {
   background: #4a90e2;
 }
 
+.swatch-ind {
+  background: #bd10e0;
+}
+
+.swatch-public {
+  background: #d0021b;
+}
+
 .legend-gradient {
   width: 100px;
   height: 10px;
@@ -268,6 +276,12 @@ body {
 .input-static {
   background: #f5f7fa;
   color: #4b5563;
+}
+
+.field-help {
+  margin-top: -4px;
+  font-size: 0.72rem;
+  color: #9ca3af;
 }
 
 .insights {

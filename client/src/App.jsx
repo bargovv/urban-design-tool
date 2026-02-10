@@ -53,7 +53,7 @@ export default function App() {
             onBlockSelect={blockSelect}
             colorMode={colorMode}
           />
-          <Legend colorMode={colorMode} />
+          <Legend colorMode={colorMode} buildings={buildings} />
         </section>
         <aside className="sidebar">
           <PropertiesPanel />

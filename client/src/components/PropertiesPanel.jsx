@@ -47,6 +47,9 @@ export default function PropertiesPanel() {
   const sharedLandUse = getSharedValue('landUseExisting');
   const sharedSetback = getSharedValue('setback');
 
+  const allSelectedFromDxfBuildings =
+    selectedBuildings.length > 0 && selectedBuildings.every((building) => building.layer === 'BUILDINGS');
+
   return (
     <div className="panel properties">
       <h3>
@@ -105,6 +108,7 @@ export default function PropertiesPanel() {
                   <select
                     className="input"
                     value={sharedSetback}
+                    disabled={allSelectedFromDxfBuildings}
                     onChange={(event) => updateSelection('setback', event.target.value)}
                   >
                     <option value="" disabled>
@@ -116,6 +120,9 @@ export default function PropertiesPanel() {
                     <option value="Large">Large</option>
                   </select>
                 </Field>
+                {allSelectedFromDxfBuildings && (
+                  <div className="field-help">Setback is locked for imported BUILDINGS footprints.</div>
+                )}
               </Section>
             </>
           )}
