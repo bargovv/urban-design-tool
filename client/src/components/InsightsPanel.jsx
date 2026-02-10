@@ -1,5 +1,6 @@
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Car, Leaf, Map } from 'lucide-react';
+import { formatArea } from '../utils/area.js';
 import { useUrbanStore } from '../store/useUrbanStore';
 
 const TabButton = ({ active, onClick, icon, label }) => (
@@ -20,6 +21,11 @@ const KPI = ({ label, value, unit, color = '#333' }) => (
 export default function InsightsPanel({ stats, analysisTab }) {
   const setAnalysisTab = useUrbanStore((state) => state.setAnalysisTab);
 
+  const gfaArea = formatArea(stats.gfa);
+  const plotArea = formatArea(stats.plotArea);
+  const roadArea = formatArea(stats.roadArea);
+  const cityArea = formatArea(stats.plotArea + stats.roadArea);
+
   return (
     <div className="panel insights">
       <h3>
@@ -37,18 +43,14 @@ export default function InsightsPanel({ stats, analysisTab }) {
       {analysisTab === 'DEMO' && (
         <>
           <div className="kpi-grid">
-            <KPI label="Total GFA" value={`${(stats.gfa / 1000).toFixed(1)}k`} unit="m²" />
+            <KPI label="Total GFA" value={gfaArea.value} unit={gfaArea.unit} />
             <KPI label="Avg FAR" value={stats.far} unit="" />
             <KPI label="Residents" value={Math.round(stats.residents)} unit="ppl" color="#2e7d32" />
             <KPI label="Jobs" value={Math.round(stats.jobs)} unit="jobs" color="#1565c0" />
-            <KPI label="Plot Area" value={(stats.plotArea / 1000).toFixed(1)} unit="k m²" />
-            <KPI label="Road Area" value={(stats.roadArea / 1000).toFixed(1)} unit="k m²" />
-            <KPI
-              label="City Area"
-              value={((stats.plotArea + stats.roadArea) / 1000).toFixed(1)}
-              unit="k m²"
-            />
-            <KPI label="Built-up Area" value={(stats.gfa / 1000).toFixed(1)} unit="k m²" />
+            <KPI label="Plot Area" value={plotArea.value} unit={plotArea.unit} />
+            <KPI label="Road Area" value={roadArea.value} unit={roadArea.unit} />
+            <KPI label="City Area" value={cityArea.value} unit={cityArea.unit} />
+            <KPI label="Built-up Area" value={gfaArea.value} unit={gfaArea.unit} />
             <KPI
               label="Private/Public"
               value={stats.privatePublicRatio ? stats.privatePublicRatio.toFixed(2) : '—'}

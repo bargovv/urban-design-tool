@@ -1,5 +1,6 @@
 import DxfParser from 'dxf-parser';
-import { area, intersect, polygon } from '@turf/turf';
+import { intersect, polygon } from '@turf/turf';
+import { calculateFeaturePlanarArea, calculatePlanarArea } from './area.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const parser = new DxfParser();
@@ -47,7 +48,8 @@ export const parseDxfData = (dxfString) => {
           groundFloorUse: 'Parking',
           hasBasement: 'No',
           basementType: '',
-          occupancy: 'Own Residence'
+          occupancy: 'Own Residence',
+          areaSqm: 0
         });
       }
     });
@@ -61,10 +63,14 @@ export const parseDxfData = (dxfString) => {
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
-    const centeredEntities = entities.map((building) => ({
-      ...building,
-      shape: building.originalShape.map((point) => [point.x - centerX, point.y - centerY])
-    }));
+    const centeredEntities = entities.map((building) => {
+      const shape = building.originalShape.map((point) => [point.x - centerX, point.y - centerY]);
+      return {
+        ...building,
+        shape,
+        areaSqm: calculatePlanarArea(shape)
+      };
+    });
 
     const plots = centeredEntities.filter((entity) => entity.type === 'Plot');
     if (plots.length === 0) {
@@ -97,7 +103,7 @@ export const parseDxfData = (dxfString) => {
           overlap = null;
         }
         if (!overlap) return;
-        const overlapArea = area(overlap);
+        const overlapArea = calculateFeaturePlanarArea(overlap);
         if (overlapArea > bestArea) {
           bestArea = overlapArea;
           bestPlotId = plot.id;

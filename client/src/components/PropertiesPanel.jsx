@@ -1,5 +1,5 @@
-import { area, polygon } from '@turf/turf';
 import { Settings2 } from 'lucide-react';
+import { formatArea } from '../utils/area.js';
 import { useUrbanStore } from '../store/useUrbanStore';
 
 const Field = ({ label, children }) => (
@@ -25,12 +25,9 @@ export default function PropertiesPanel() {
   );
   const selectedPlots = buildings.filter((building) => building.type === 'Plot' && selectedIds.includes(building.id));
 
-  const plotAreas = selectedPlots.map((plot) => {
-    const ring = plot.shape.length ? [...plot.shape, plot.shape[0]] : [];
-    if (!ring.length) return 0;
-    return area(polygon([ring]));
-  });
+  const plotAreas = selectedPlots.map((plot) => plot.areaSqm ?? 0);
   const totalPlotArea = plotAreas.reduce((sum, value) => sum + value, 0);
+  const totalPlotAreaFormatted = formatArea(totalPlotArea);
   const emptyPlotsCount = selectedPlots.filter((plot) => plot.isEmptyPlot).length;
   const plotSummaryLabel =
     selectedPlots.length === 1
@@ -67,7 +64,7 @@ export default function PropertiesPanel() {
                 </div>
               </Field>
               <Field label="Total plot area">
-                <div className="input input-static">{totalPlotArea.toFixed(2)} m²</div>
+                <div className="input input-static">{totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}</div>
               </Field>
             </Section>
           )}

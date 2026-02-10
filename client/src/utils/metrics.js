@@ -1,3 +1,5 @@
+import { calculatePlanarArea } from './area.js';
+
 const METRICS = {
   Residential: { pop: 35, energy: 150, water: 135, waste: 0.5, parking: 80 },
   Commercial: { job: 15, energy: 250, water: 40, waste: 0.1, parking: 50 },
@@ -5,16 +7,6 @@ const METRICS = {
   Public: { job: 25, energy: 200, water: 30, waste: 0.2, parking: 100 }
 };
 
-const calculateArea = (points) => {
-  if (!points || points.length < 3) return 0;
-  let area = 0;
-  for (let i = 0; i < points.length; i += 1) {
-    const j = (i + 1) % points.length;
-    area += points[i][0] * points[j][1];
-    area -= points[j][0] * points[i][1];
-  }
-  return Math.abs(area / 2);
-};
 
 export const calculateStats = ({ buildings, selectedIds }) => {
   const plotAreas = buildings.filter((building) => building.type === 'Plot');
@@ -43,15 +35,15 @@ export const calculateStats = ({ buildings, selectedIds }) => {
   let totalRoadArea = 0;
 
   plotAreas.forEach((plot) => {
-    totalPlotArea += calculateArea(plot.shape);
+    totalPlotArea += plot.areaSqm ?? calculatePlanarArea(plot.shape);
   });
 
   roadAreas.forEach((road) => {
-    totalRoadArea += calculateArea(road.shape);
+    totalRoadArea += road.areaSqm ?? calculatePlanarArea(road.shape);
   });
 
   subset.forEach((building) => {
-    const area = calculateArea(building.shape);
+    const area = building.areaSqm ?? calculatePlanarArea(building.shape);
 
     let coverage = 1.0;
     if (building.setback === 'Minimum') coverage = 0.95;
