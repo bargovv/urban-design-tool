@@ -19,7 +19,16 @@ export default function App() {
   const clearSelection = useUrbanStore((state) => state.clearSelection);
   const blockSelect = useUrbanStore((state) => state.blockSelect);
 
-  const stats = useMemo(
+  const siteStats = useMemo(
+    () =>
+      calculateStats({
+        buildings,
+        selectedIds: []
+      }),
+    [buildings]
+  );
+
+  const selectionStats = useMemo(
     () =>
       calculateStats({
         buildings,
@@ -48,7 +57,12 @@ export default function App() {
         </section>
         <aside className="sidebar">
           <PropertiesPanel />
-          <InsightsPanel stats={stats} analysisTab={analysisTab} />
+          <InsightsPanel
+            siteStats={siteStats}
+            selectionStats={selectionStats}
+            selectedCount={selectedIds.length}
+            analysisTab={analysisTab}
+          />
         </aside>
       </div>
     </div>

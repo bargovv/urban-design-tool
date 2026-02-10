@@ -9,13 +9,20 @@ const METRICS = {
 
 
 export const calculateStats = ({ buildings, selectedIds }) => {
-  const plotAreas = buildings.filter((building) => building.type === 'Plot');
-  const roadAreas = buildings.filter((building) => building.type === 'Road');
-  const builtAreas = buildings.filter((building) => building.type === 'Building');
-  const subset =
-    selectedIds.length > 0
-      ? builtAreas.filter((building) => selectedIds.includes(building.id))
-      : builtAreas;
+  const selectedSet = new Set(selectedIds);
+  const selectedMode = selectedIds.length > 0;
+
+  const plotAreas = selectedMode
+    ? buildings.filter((building) => building.type === 'Plot' && selectedSet.has(building.id))
+    : buildings.filter((building) => building.type === 'Plot');
+  const roadAreas = selectedMode
+    ? buildings.filter((building) => building.type === 'Road' && selectedSet.has(building.id))
+    : buildings.filter((building) => building.type === 'Road');
+  const builtAreas = selectedMode
+    ? buildings.filter((building) => building.type === 'Building' && selectedSet.has(building.id))
+    : buildings.filter((building) => building.type === 'Building');
+
+  const subset = builtAreas;
   const data = {
     gfa: 0,
     far: 0,
@@ -78,5 +85,5 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     color: ['#F8E71C', '#4A90E2', '#BD10E0', '#D0021B', '#7ED321', '#333'][index] || '#999'
   }));
 
-  return { ...data, count: subset.length, isSubset: selectedIds.length > 0 };
+  return { ...data, count: selectedMode ? selectedIds.length : buildings.length, isSubset: selectedMode };
 };

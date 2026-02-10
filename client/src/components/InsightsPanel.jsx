@@ -18,21 +18,28 @@ const KPI = ({ label, value, unit, color = '#333' }) => (
   </div>
 );
 
-export default function InsightsPanel({ stats, analysisTab }) {
+export default function InsightsPanel({ siteStats, selectionStats, selectedCount, analysisTab }) {
   const setAnalysisTab = useUrbanStore((state) => state.setAnalysisTab);
 
-  const gfaArea = formatArea(stats.gfa);
-  const plotArea = formatArea(stats.plotArea);
-  const roadArea = formatArea(stats.roadArea);
-  const cityArea = formatArea(stats.plotArea + stats.roadArea);
+  const selectedStats = selectedCount > 0 ? selectionStats : siteStats;
+
+  const siteGfaArea = formatArea(siteStats.gfa);
+  const sitePlotArea = formatArea(siteStats.plotArea);
+  const siteRoadArea = formatArea(siteStats.roadArea);
+  const siteCityArea = formatArea(siteStats.plotArea + siteStats.roadArea);
+
+  const selectedGfaArea = formatArea(selectedStats.gfa);
+  const selectedPlotArea = formatArea(selectedStats.plotArea);
+  const selectedRoadArea = formatArea(selectedStats.roadArea);
+  const selectedCityArea = formatArea(selectedStats.plotArea + selectedStats.roadArea);
 
   return (
     <div className="panel insights">
       <h3>
         <Map size={18} /> Insights
       </h3>
-      <div className={stats.isSubset ? 'scope-card scope-selected' : 'scope-card scope-total'}>
-        <div>SCOPE: {stats.isSubset ? `SELECTED (${stats.count})` : `TOTAL CITY (${stats.count})`}</div>
+      <div className={selectedCount > 0 ? 'scope-card scope-selected' : 'scope-card scope-total'}>
+        <div>SCOPE: {selectedCount > 0 ? `SELECTED (${selectedCount})` : `TOTAL CITY`}</div>
       </div>
       <div className="tabs">
         <TabButton active={analysisTab === 'DEMO'} onClick={() => setAnalysisTab('DEMO')} icon={<Map size={14} />} label="Demo" />
@@ -42,26 +49,44 @@ export default function InsightsPanel({ stats, analysisTab }) {
 
       {analysisTab === 'DEMO' && (
         <>
+          <div className="insights-section-title">Site level</div>
           <div className="kpi-grid">
-            <KPI label="Total GFA" value={gfaArea.value} unit={gfaArea.unit} />
-            <KPI label="Avg FAR" value={stats.far} unit="" />
-            <KPI label="Residents" value={Math.round(stats.residents)} unit="ppl" color="#2e7d32" />
-            <KPI label="Jobs" value={Math.round(stats.jobs)} unit="jobs" color="#1565c0" />
-            <KPI label="Plot Area" value={plotArea.value} unit={plotArea.unit} />
-            <KPI label="Road Area" value={roadArea.value} unit={roadArea.unit} />
-            <KPI label="City Area" value={cityArea.value} unit={cityArea.unit} />
-            <KPI label="Built-up Area" value={gfaArea.value} unit={gfaArea.unit} />
+            <KPI label="Total GFA" value={siteGfaArea.value} unit={siteGfaArea.unit} />
+            <KPI label="Avg FAR" value={siteStats.far} unit="" />
+            <KPI label="Residents" value={Math.round(siteStats.residents)} unit="ppl" color="#2e7d32" />
+            <KPI label="Jobs" value={Math.round(siteStats.jobs)} unit="jobs" color="#1565c0" />
+            <KPI label="Plot Area" value={sitePlotArea.value} unit={sitePlotArea.unit} />
+            <KPI label="Road Area" value={siteRoadArea.value} unit={siteRoadArea.unit} />
+            <KPI label="City Area" value={siteCityArea.value} unit={siteCityArea.unit} />
+            <KPI label="Built-up Area" value={siteGfaArea.value} unit={siteGfaArea.unit} />
             <KPI
               label="Private/Public"
-              value={stats.privatePublicRatio ? stats.privatePublicRatio.toFixed(2) : '—'}
+              value={siteStats.privatePublicRatio ? siteStats.privatePublicRatio.toFixed(2) : '—'}
+              unit="ratio"
+            />
+          </div>
+
+          <div className="insights-section-title">Selection level</div>
+          <div className="kpi-grid">
+            <KPI label="Total GFA" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
+            <KPI label="Avg FAR" value={selectedStats.far} unit="" />
+            <KPI label="Residents" value={Math.round(selectedStats.residents)} unit="ppl" color="#2e7d32" />
+            <KPI label="Jobs" value={Math.round(selectedStats.jobs)} unit="jobs" color="#1565c0" />
+            <KPI label="Plot Area" value={selectedPlotArea.value} unit={selectedPlotArea.unit} />
+            <KPI label="Road Area" value={selectedRoadArea.value} unit={selectedRoadArea.unit} />
+            <KPI label="City Area" value={selectedCityArea.value} unit={selectedCityArea.unit} />
+            <KPI label="Built-up Area" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
+            <KPI
+              label="Private/Public"
+              value={selectedStats.privatePublicRatio ? selectedStats.privatePublicRatio.toFixed(2) : '—'}
               unit="ratio"
             />
           </div>
           <div className="chart-card">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={stats.landUse} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
-                  {stats.landUse.map((entry) => (
+                <Pie data={selectedStats.landUse} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                  {selectedStats.landUse.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
@@ -75,9 +100,9 @@ export default function InsightsPanel({ stats, analysisTab }) {
 
       {analysisTab === 'ECO' && (
         <div className="stack">
-          <KPI label="Annual Energy" value={(stats.energy / 1000).toFixed(1)} unit="MWh/yr" color="#F5A623" />
-          <KPI label="Daily Water" value={(stats.water / 1000).toFixed(1)} unit="kL/day" color="#4A90E2" />
-          <KPI label="Solid Waste" value={Math.round(stats.waste)} unit="kg/day" color="#8B572A" />
+          <KPI label="Annual Energy" value={(selectedStats.energy / 1000).toFixed(1)} unit="MWh/yr" color="#F5A623" />
+          <KPI label="Daily Water" value={(selectedStats.water / 1000).toFixed(1)} unit="kL/day" color="#4A90E2" />
+          <KPI label="Solid Waste" value={Math.round(selectedStats.waste)} unit="kg/day" color="#8B572A" />
           <div className="assumptions">
             Assumptions: Energy (Resi 150, Com 250), Water (135L/p), Waste (0.5kg/p)
           </div>
@@ -86,10 +111,10 @@ export default function InsightsPanel({ stats, analysisTab }) {
 
       {analysisTab === 'INFRA' && (
         <div className="stack">
-          <KPI label="Parking Demand" value={Math.round(stats.parking)} unit="spots" color="#333" />
+          <KPI label="Parking Demand" value={Math.round(selectedStats.parking)} unit="spots" color="#333" />
           <div className="chart-card chart-compact">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[{ name: 'Required', val: Math.round(stats.parking) }]} layout="vertical">
+              <BarChart data={[{ name: 'Required', val: Math.round(selectedStats.parking) }]} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
                 <Tooltip />
