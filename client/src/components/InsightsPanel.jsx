@@ -42,6 +42,12 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
         <div>SCOPE: {selectedCount > 0 ? `SELECTED (${selectedCount})` : `TOTAL CITY`}</div>
       </div>
 
+      <div className="selection-breakdown">
+        <span>Total plots: {siteStats.plotTotals?.total ?? 0}</span>
+        <span>Occupied: {siteStats.plotTotals?.occupied ?? 0}</span>
+        <span>Empty: {siteStats.plotTotals?.empty ?? 0}</span>
+      </div>
+
       {selectedCount > 0 && (
         <div className="selection-breakdown">
           <span>Plots: {selectedStats.selectedBreakdown?.plots ?? 0}</span>
@@ -74,22 +80,26 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
             />
           </div>
 
-          <div className="insights-section-title">Selection level</div>
-          <div className="kpi-grid">
-            <KPI label="Total GFA" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
-            <KPI label="Avg FAR" value={selectedStats.far} unit="" />
-            <KPI label="Residents" value={Math.round(selectedStats.residents)} unit="ppl" color="#2e7d32" />
-            <KPI label="Jobs" value={Math.round(selectedStats.jobs)} unit="jobs" color="#1565c0" />
-            <KPI label="Plot Area" value={selectedPlotArea.value} unit={selectedPlotArea.unit} />
-            <KPI label="Road Area" value={selectedRoadArea.value} unit={selectedRoadArea.unit} />
-            <KPI label="City Area" value={selectedCityArea.value} unit={selectedCityArea.unit} />
-            <KPI label="Built-up Area" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
-            <KPI
-              label="Private/Public"
-              value={selectedStats.privatePublicRatio ? selectedStats.privatePublicRatio.toFixed(2) : '—'}
-              unit="ratio"
-            />
-          </div>
+          {selectedCount > 0 && (
+            <>
+              <div className="insights-section-title">Selection level</div>
+              <div className="kpi-grid">
+                <KPI label="Total GFA" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
+                <KPI label="Avg FAR" value={selectedStats.far} unit="" />
+                <KPI label="Residents" value={Math.round(selectedStats.residents)} unit="ppl" color="#2e7d32" />
+                <KPI label="Jobs" value={Math.round(selectedStats.jobs)} unit="jobs" color="#1565c0" />
+                <KPI label="Plot Area" value={selectedPlotArea.value} unit={selectedPlotArea.unit} />
+                <KPI label="Road Area" value={selectedRoadArea.value} unit={selectedRoadArea.unit} />
+                <KPI label="City Area" value={selectedCityArea.value} unit={selectedCityArea.unit} />
+                <KPI label="Built-up Area" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
+                <KPI
+                  label="Private/Public"
+                  value={selectedStats.privatePublicRatio ? selectedStats.privatePublicRatio.toFixed(2) : '—'}
+                  unit="ratio"
+                />
+              </div>
+            </>
+          )}
           <div className="chart-card">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -104,7 +114,7 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
             </ResponsiveContainer>
           </div>
 
-          {selectedStats.selectedPlotDetails?.length > 0 && (
+          {selectedCount > 0 && selectedStats.selectedPlotDetails?.length > 0 && (
             <div className="plot-far-list">
               <div className="insights-section-title">Selected plots: FAR details</div>
               {selectedStats.selectedPlotDetails.map((plot) => {

@@ -36,7 +36,12 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     waste: 0,
     plotArea: 0,
     roadArea: 0,
-    privatePublicRatio: 0
+    privatePublicRatio: 0,
+    plotTotals: {
+      total: 0,
+      occupied: 0,
+      empty: 0
+    }
   };
   const typeMap = {};
   let totalPlotArea = 0;
@@ -86,19 +91,24 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     data.parking += gfa / metrics.parking;
   });
 
-  const selectedPlotDetails = plotAreas.map((plot) => {
-    const plotArea = plot.areaSqm ?? calculatePlanarArea(plot.shape);
-    const relatedBuildings = allBuildings.filter((building) => building.plotId === plot.id);
-    const buildingGfa = relatedBuildings.reduce((sum, building) => sum + computeBuildingGfa(building), 0);
-    return {
-      id: plot.id,
-      areaSqm: plotArea,
-      buildingCount: plot.buildingCount ?? relatedBuildings.length,
-      buildingGfa,
-      far: plotArea > 0 ? buildingGfa / plotArea : 0,
-      isEmptyPlot: (plot.buildingCount ?? relatedBuildings.length) === 0
-    };
-  });
+  const selectedPlotDetails = selectedMode
+    ? plotAreas.map((plot) => {
+        const plotArea = plot.areaSqm ?? calculatePlanarArea(plot.shape);
+        const relatedBuildings = allBuildings.filter((building) => building.plotId === plot.id);
+        const buildingGfa = relatedBuildings.reduce((sum, building) => sum + computeBuildingGfa(building), 0);
+        return {
+          id: plot.id,
+          areaSqm: plotArea,
+          buildingCount: plot.buildingCount ?? relatedBuildings.length,
+          buildingGfa,
+          far: plotArea > 0 ? buildingGfa / plotArea : 0,
+          isEmptyPlot: (plot.buildingCount ?? relatedBuildings.length) === 0
+        };
+      })
+    : [];
+
+  const allPlots = buildings.filter((building) => building.type === 'Plot');
+  const occupiedPlots = allPlots.filter((plot) => (plot.buildingCount ?? 0) > 0);
 
   data.far = totalPlotArea > 0 ? (data.gfa / totalPlotArea).toFixed(2) : 0;
   data.plotArea = totalPlotArea;
@@ -109,6 +119,11 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     value: Math.round(typeMap[key]),
     color: ['#F8E71C', '#4A90E2', '#BD10E0', '#D0021B', '#7ED321', '#333'][index] || '#999'
   }));
+  data.plotTotals = {
+    total: allPlots.length,
+    occupied: occupiedPlots.length,
+    empty: allPlots.length - occupiedPlots.length
+  };
 
   return {
     ...data,

@@ -20,6 +20,7 @@ export default function PropertiesPanel() {
   const selectedIds = useUrbanStore((state) => state.selectedIds);
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
+  const generateBuildingsFromSelectedEmptyPlots = useUrbanStore((state) => state.generateBuildingsFromSelectedEmptyPlots);
   const selectedBuildings = buildings.filter(
     (building) => building.type === 'Building' && selectedIds.includes(building.id)
   );
@@ -69,6 +70,11 @@ export default function PropertiesPanel() {
               <Field label="Total plot area">
                 <div className="input input-static">{totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}</div>
               </Field>
+              {selectedPlots.some((plot) => plot.isEmptyPlot) && (
+                <button type="button" className="plot-action-btn" onClick={generateBuildingsFromSelectedEmptyPlots}>
+                  Generate building for empty plot(s)
+                </button>
+              )}
             </Section>
           )}
           {selectedBuildings.length === 0 ? (

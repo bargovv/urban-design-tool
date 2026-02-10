@@ -1,5 +1,5 @@
 import DxfParser from 'dxf-parser';
-import { intersect, polygon } from '@turf/turf';
+import { booleanPointInPolygon, intersect, point, polygon } from '@turf/turf';
 import { calculateFeaturePlanarArea, calculatePlanarArea } from './area.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -109,6 +109,27 @@ export const parseDxfData = (dxfString) => {
           bestPlotId = plot.id;
         }
       });
+
+      if (!bestPlotId) {
+        const centroidPoint = point([
+          entity.shape.reduce((sum, [x]) => sum + x, 0) / entity.shape.length,
+          entity.shape.reduce((sum, [, y]) => sum + y, 0) / entity.shape.length
+        ]);
+
+        const containingPlot = plotPolygons.find(({ polygon: plotPolygon }) => {
+          if (!plotPolygon) return false;
+          try {
+            return booleanPointInPolygon(centroidPoint, plotPolygon, { ignoreBoundary: false });
+          } catch (error) {
+            return false;
+          }
+        });
+
+        if (containingPlot) {
+          bestPlotId = containingPlot.plot.id;
+        }
+      }
+
       return { ...entity, plotId: bestPlotId };
     });
 

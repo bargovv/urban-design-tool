@@ -434,6 +434,19 @@ body {
   color: #111827;
 }
 
+.plot-action-btn {
+  margin-top: 4px;
+  width: 100%;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .assumptions {
   font-size: 0.7rem;
   color: #888;
