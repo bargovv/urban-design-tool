@@ -41,6 +41,14 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
       <div className={selectedCount > 0 ? 'scope-card scope-selected' : 'scope-card scope-total'}>
         <div>SCOPE: {selectedCount > 0 ? `SELECTED (${selectedCount})` : `TOTAL CITY`}</div>
       </div>
+
+      {selectedCount > 0 && (
+        <div className="selection-breakdown">
+          <span>Plots: {selectedStats.selectedBreakdown?.plots ?? 0}</span>
+          <span>Roads: {selectedStats.selectedBreakdown?.roads ?? 0}</span>
+          <span>Buildings: {selectedStats.selectedBreakdown?.buildings ?? 0}</span>
+        </div>
+      )}
       <div className="tabs">
         <TabButton active={analysisTab === 'DEMO'} onClick={() => setAnalysisTab('DEMO')} icon={<Map size={14} />} label="Demo" />
         <TabButton active={analysisTab === 'ECO'} onClick={() => setAnalysisTab('ECO')} icon={<Leaf size={14} />} label="Eco" />
@@ -95,6 +103,25 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
               </PieChart>
             </ResponsiveContainer>
           </div>
+
+          {selectedStats.selectedPlotDetails?.length > 0 && (
+            <div className="plot-far-list">
+              <div className="insights-section-title">Selected plots: FAR details</div>
+              {selectedStats.selectedPlotDetails.map((plot) => {
+                const plotArea = formatArea(plot.areaSqm);
+                const gfa = formatArea(plot.buildingGfa);
+                return (
+                  <div key={plot.id} className="plot-far-item">
+                    <div className="plot-far-head">Plot {plot.id}</div>
+                    <div>Area: {plotArea.value} {plotArea.unit}</div>
+                    <div>Building GFA: {gfa.value} {gfa.unit}</div>
+                    <div>Buildings: {plot.buildingCount} ({plot.isEmptyPlot ? 'empty' : 'occupied'})</div>
+                    <div>Plot FAR: {plot.far.toFixed(2)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 

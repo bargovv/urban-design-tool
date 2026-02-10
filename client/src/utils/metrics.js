@@ -23,6 +23,7 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     : buildings.filter((building) => building.type === 'Building');
 
   const subset = builtAreas;
+  const allBuildings = buildings.filter((building) => building.type === 'Building');
   const data = {
     gfa: 0,
     far: 0,
@@ -41,6 +42,12 @@ export const calculateStats = ({ buildings, selectedIds }) => {
   let totalPlotArea = 0;
   let totalRoadArea = 0;
 
+  const selectedBreakdown = {
+    plots: plotAreas.length,
+    roads: roadAreas.length,
+    buildings: builtAreas.length
+  };
+
   plotAreas.forEach((plot) => {
     totalPlotArea += plot.areaSqm ?? calculatePlanarArea(plot.shape);
   });
@@ -49,7 +56,7 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     totalRoadArea += road.areaSqm ?? calculatePlanarArea(road.shape);
   });
 
-  subset.forEach((building) => {
+  const computeBuildingGfa = (building) => {
     const area = building.areaSqm ?? calculatePlanarArea(building.shape);
 
     let coverage = 1.0;
@@ -58,7 +65,11 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     else if (building.setback === 'Large') coverage = 0.75;
 
     const footprint = area * coverage;
-    const gfa = footprint * building.floors;
+    return footprint * building.floors;
+  };
+
+  subset.forEach((building) => {
+    const gfa = computeBuildingGfa(building);
     data.gfa += gfa;
 
     const useKey = building.landUseExisting || 'Residential';
@@ -75,6 +86,20 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     data.parking += gfa / metrics.parking;
   });
 
+  const selectedPlotDetails = plotAreas.map((plot) => {
+    const plotArea = plot.areaSqm ?? calculatePlanarArea(plot.shape);
+    const relatedBuildings = allBuildings.filter((building) => building.plotId === plot.id);
+    const buildingGfa = relatedBuildings.reduce((sum, building) => sum + computeBuildingGfa(building), 0);
+    return {
+      id: plot.id,
+      areaSqm: plotArea,
+      buildingCount: plot.buildingCount ?? relatedBuildings.length,
+      buildingGfa,
+      far: plotArea > 0 ? buildingGfa / plotArea : 0,
+      isEmptyPlot: (plot.buildingCount ?? relatedBuildings.length) === 0
+    };
+  });
+
   data.far = totalPlotArea > 0 ? (data.gfa / totalPlotArea).toFixed(2) : 0;
   data.plotArea = totalPlotArea;
   data.roadArea = totalRoadArea;
@@ -85,5 +110,11 @@ export const calculateStats = ({ buildings, selectedIds }) => {
     color: ['#F8E71C', '#4A90E2', '#BD10E0', '#D0021B', '#7ED321', '#333'][index] || '#999'
   }));
 
-  return { ...data, count: selectedMode ? selectedIds.length : buildings.length, isSubset: selectedMode };
+  return {
+    ...data,
+    count: selectedMode ? selectedIds.length : buildings.length,
+    isSubset: selectedMode,
+    selectedBreakdown,
+    selectedPlotDetails
+  };
 };
