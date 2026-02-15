@@ -1,5 +1,18 @@
 import { create } from 'zustand';
 
+const FLOOR_SELECTION_PREFIX = 'floor::';
+
+export const makeFloorSelectionId = (buildingId, floorIndex) =>
+  `${FLOOR_SELECTION_PREFIX}${buildingId}::${floorIndex}`;
+
+export const parseFloorSelectionId = (id) => {
+  if (typeof id !== 'string' || !id.startsWith(FLOOR_SELECTION_PREFIX)) return null;
+  const [, buildingId, floorIndexRaw] = id.split('::');
+  const floorIndex = Number(floorIndexRaw);
+  if (!buildingId || Number.isNaN(floorIndex)) return null;
+  return { buildingId, floorIndex };
+};
+
 const normalizeBuildingEntity = (entity) => {
   if (!entity || entity.type !== 'Building') return entity;
 
@@ -43,10 +56,10 @@ const createId = () => {
   return `id-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 };
 
-
 export const useUrbanStore = create((set) => ({
   buildings: [],
   selectedIds: [],
+  selectedFloorIds: [],
   selectionMode: 'SINGLE',
   selectionFilter: 'AUTO',
   viewMode: 'ISO',
@@ -58,45 +71,68 @@ export const useUrbanStore = create((set) => ({
   setViewMode: (viewMode) => set({ viewMode }),
   setAnalysisTab: (analysisTab) => set({ analysisTab }),
   setColorMode: (colorMode) => set({ colorMode }),
-  clearSelection: () => set({ selectedIds: [] }),
-  blockSelect: (ids) => set({ selectedIds: ids }),
+  clearSelection: () => set({ selectedIds: [], selectedFloorIds: [] }),
+  blockSelect: (ids) => set({ selectedIds: ids, selectedFloorIds: [] }),
   toggleSelection: (id, isMulti) =>
     set((state) => {
-      if (!id) return { selectedIds: [] };
+      if (!id) return { selectedIds: [], selectedFloorIds: [] };
       if (isMulti) {
         return {
           selectedIds: state.selectedIds.includes(id)
             ? state.selectedIds.filter((item) => item !== id)
-            : [...state.selectedIds, id]
+            : [...state.selectedIds, id],
+          selectedFloorIds: []
         };
       }
-      return { selectedIds: [id] };
+      return { selectedIds: [id], selectedFloorIds: [] };
+    }),
+  toggleFloorSelection: (floorId, isMulti) =>
+    set((state) => {
+      if (!floorId) return { selectedFloorIds: [] };
+      if (isMulti) {
+        return {
+          selectedFloorIds: state.selectedFloorIds.includes(floorId)
+            ? state.selectedFloorIds.filter((item) => item !== floorId)
+            : [...state.selectedFloorIds, floorId],
+          selectedIds: []
+        };
+      }
+      return { selectedFloorIds: [floorId], selectedIds: [] };
     }),
   updateSelection: (key, value) =>
-    set((state) => ({
-      buildings: state.buildings.map((building) => {
-        if (!state.selectedIds.includes(building.id)) return building;
-        if (building.type !== 'Building') return { ...building, [key]: value };
+    set((state) => {
+      const selectedBuildingIdsFromFloors = new Set(
+        state.selectedFloorIds
+          .map((id) => parseFloorSelectionId(id)?.buildingId)
+          .filter(Boolean)
+      );
 
-        if (key === 'landUseExisting') {
-          return {
-            ...building,
-            landUseExisting: value,
-            macroLandUse: value
-          };
-        }
+      return {
+        buildings: state.buildings.map((building) => {
+          const isSelectedEntity = state.selectedIds.includes(building.id) || selectedBuildingIdsFromFloors.has(building.id);
+          if (!isSelectedEntity) return building;
+          if (building.type !== 'Building') return { ...building, [key]: value };
 
-        if (key === 'macroLandUse') {
-          return {
-            ...building,
-            macroLandUse: value,
-            landUseExisting: value
-          };
-        }
+          if (key === 'landUseExisting') {
+            return {
+              ...building,
+              landUseExisting: value,
+              macroLandUse: value
+            };
+          }
 
-        return { ...building, [key]: value };
-      })
-    })),
+          if (key === 'macroLandUse') {
+            return {
+              ...building,
+              macroLandUse: value,
+              landUseExisting: value
+            };
+          }
+
+          return { ...building, [key]: value };
+        })
+      };
+    }),
   generateBuildingsForSelectedPlots: ({ floors = 2, setback = 'Nil' } = {}) =>
     set((state) => {
       const plots = state.buildings.filter((item) => item.type === 'Plot');
@@ -142,7 +178,8 @@ export const useUrbanStore = create((set) => ({
 
       return {
         buildings: [...nextBuildings, ...newBuildings],
-        selectedIds: Array.from(new Set([...state.selectedIds, ...newBuildings.map((item) => item.id)]))
+        selectedIds: Array.from(new Set([...state.selectedIds, ...newBuildings.map((item) => item.id)])),
+        selectedFloorIds: []
       };
     })
 }));

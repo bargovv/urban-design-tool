@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, ContactShadows, Environment, Edges } from '@react-three/drei';
 import * as THREE from 'three';
+import { makeFloorSelectionId } from '../store/useUrbanStore';
 
 const findIsland = (startId, allBuildings) => {
   const buildings = allBuildings.filter((building) => building.type === 'Building');
@@ -75,10 +76,18 @@ const CameraController = ({ mode }) => {
   return null;
 };
 
+const getFloorCount = (data) => {
+  const floorHeight = data.floorHeight || 3;
+  const heightMeters = Number(data.height) > 0 ? Number(data.height) : (Number(data.floors) || 0) * floorHeight;
+  return Math.max(1, Math.round(heightMeters / floorHeight));
+};
+
 const EntityMesh = ({
   data,
   onToggle,
+  onToggleFloor,
   isSelected,
+  selectedFloorIds,
   selectionMode,
   selectionFilter,
   buildings,
@@ -154,6 +163,7 @@ const EntityMesh = ({
   const canSelectPlot = selectionFilter === 'AUTO' || selectionFilter === 'PLOTS';
   const canSelectBuilding = selectionFilter === 'AUTO' || selectionFilter === 'BUILDINGS';
   const canSelectRoad = selectionFilter === 'AUTO' || selectionFilter === 'ROADS';
+  const canSelectFloor = selectionFilter === 'AUTO' || selectionFilter === 'FLOORS';
 
   const handleClick = (event) => {
     event.stopPropagation();
@@ -169,6 +179,10 @@ const EntityMesh = ({
     }
   };
 
+  const floorCount = isBuilding ? getFloorCount(data) : 0;
+  const floorHeight = data.floorHeight || 3;
+  const floorDepth = Math.max(0.1, floorHeight * 0.92);
+
   return (
     <group>
       <mesh
@@ -183,27 +197,74 @@ const EntityMesh = ({
         <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
       </mesh>
 
-      {!isPlot && (
+      {!isPlot && !isBuilding && (
         <mesh
           position={[0, 0, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
           castShadow
           onClick={handleClick}
-          onPointerOver={() =>
-            (isBuilding && canSelectBuilding && (document.body.style.cursor = 'pointer')) ||
-            (isRoad && canSelectRoad && (document.body.style.cursor = 'pointer'))
-          }
+          onPointerOver={() => isRoad && canSelectRoad && (document.body.style.cursor = 'pointer')}
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
-          {isSelected ? (
-            <meshPhysicalMaterial color="#EAFF00" emissive="#EAFF00" emissiveIntensity={0.5} transparent opacity={0.6} />
-          ) : (
-            <meshStandardMaterial color={baseColor} roughness={0.5} />
-          )}
+          <meshStandardMaterial color={baseColor} roughness={0.5} />
           <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
         </mesh>
+      )}
+
+      {isBuilding && (
+        <group>
+          {Array.from({ length: floorCount }).map((_, index) => {
+            const floorSelectionId = makeFloorSelectionId(data.id, index + 1);
+            const isFloorSelected = selectedFloorIds.includes(floorSelectionId);
+
+            return (
+              <mesh
+                key={floorSelectionId}
+                position={[0, index * floorHeight, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                receiveShadow
+                castShadow
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (selectionMode === 'BLOCK') {
+                    handleClick(event);
+                    return;
+                  }
+
+                  if (canSelectFloor && selectionFilter === 'FLOORS') {
+                    onToggleFloor(floorSelectionId, event.ctrlKey || event.metaKey);
+                    return;
+                  }
+
+                  if (canSelectBuilding) {
+                    onToggle(data.id, event.ctrlKey || event.metaKey);
+                  }
+                }}
+                onPointerOver={() =>
+                  ((selectionFilter === 'FLOORS' && canSelectFloor) || canSelectBuilding) &&
+                  (document.body.style.cursor = 'pointer')
+                }
+                onPointerOut={() => (document.body.style.cursor = 'auto')}
+              >
+                <extrudeGeometry args={[buildingShape, { depth: floorDepth, bevelEnabled: false }]} />
+                {isFloorSelected || isSelected ? (
+                  <meshPhysicalMaterial
+                    color={isFloorSelected ? '#EAFF00' : '#BFD7FF'}
+                    emissive={isFloorSelected ? '#EAFF00' : '#9DBFFF'}
+                    emissiveIntensity={0.4}
+                    transparent
+                    opacity={0.72}
+                  />
+                ) : (
+                  <meshStandardMaterial color={baseColor} roughness={0.5} />
+                )}
+                <Edges color={isFloorSelected || isSelected ? '#fff' : 'rgba(0,0,0,0.35)'} threshold={15} />
+              </mesh>
+            );
+          })}
+        </group>
       )}
     </group>
   );
@@ -212,7 +273,9 @@ const EntityMesh = ({
 export default function Viewer3D({
   buildings,
   selectedIds,
+  selectedFloorIds,
   onToggleSelection,
+  onToggleFloorSelection,
   onClearSelection,
   viewMode,
   selectionMode,
@@ -240,7 +303,9 @@ export default function Viewer3D({
             key={building.id}
             data={building}
             isSelected={selectedIds.includes(building.id)}
+            selectedFloorIds={selectedFloorIds}
             onToggle={onToggleSelection}
+            onToggleFloor={onToggleFloorSelection}
             selectionMode={selectionMode}
             selectionFilter={selectionFilter}
             buildings={buildings}

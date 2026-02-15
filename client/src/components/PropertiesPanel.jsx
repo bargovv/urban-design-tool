@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Settings2 } from 'lucide-react';
 import { formatArea } from '../utils/area.js';
-import { useUrbanStore } from '../store/useUrbanStore';
+import { parseFloorSelectionId, useUrbanStore } from '../store/useUrbanStore';
 
 const Field = ({ label, children }) => (
   <div className="field">
@@ -29,12 +29,20 @@ export default function PropertiesPanel() {
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
   const generateBuildingsForSelectedPlots = useUrbanStore((state) => state.generateBuildingsForSelectedPlots);
+  const selectedFloorIds = useUrbanStore((state) => state.selectedFloorIds);
 
   const [newBuildingFloors, setNewBuildingFloors] = useState(2);
   const [newBuildingSetback, setNewBuildingSetback] = useState('Nil');
 
+  const selectedBuildingIdsFromFloors = new Set(
+    selectedFloorIds
+      .map((id) => parseFloorSelectionId(id)?.buildingId)
+      .filter(Boolean)
+  );
+
   const selectedBuildings = buildings.filter(
-    (building) => building.type === 'Building' && selectedIds.includes(building.id)
+    (building) =>
+      building.type === 'Building' && (selectedIds.includes(building.id) || selectedBuildingIdsFromFloors.has(building.id))
   );
   const selectedPlots = buildings.filter((building) => building.type === 'Plot' && selectedIds.includes(building.id));
 
@@ -89,7 +97,7 @@ export default function PropertiesPanel() {
       <h3>
         <Settings2 size={18} /> Properties
       </h3>
-      {selectedIds.length === 0 ? (
+      {selectedIds.length === 0 && selectedFloorIds.length === 0 ? (
         <div className="panel-empty">Select plots, roads, or buildings to edit</div>
       ) : (
         <div className="panel-content">
