@@ -104,7 +104,7 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
             </ResponsiveContainer>
           </div>
 
-          {selectedStats.selectedPlotDetails?.length > 0 && (
+          {selectedCount > 0 && selectedStats.selectedPlotDetails?.length > 0 && (
             <div className="plot-far-list">
               <div className="insights-section-title">Selected plots: FAR details</div>
               {selectedStats.selectedPlotDetails.map((plot) => {

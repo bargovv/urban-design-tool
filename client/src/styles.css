@@ -434,6 +434,24 @@ body {
   color: #111827;
 }
 
+.action-button {
+  cursor: pointer;
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+  font-weight: 600;
+}
+
+.action-button:hover {
+  background: #1f2937;
+}
+
+.compact-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+
 .assumptions {
   font-size: 0.7rem;
   color: #888;

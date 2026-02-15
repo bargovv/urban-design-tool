@@ -20,6 +20,30 @@ const normalizeBuildingEntity = (entity) => {
 
 const normalizeBuildings = (buildings) => (Array.isArray(buildings) ? buildings.map(normalizeBuildingEntity) : []);
 
+const getSetbackFactor = (setback) => {
+  if (setback === 'Minimum') return 0.95;
+  if (setback === 'Medium') return 0.85;
+  if (setback === 'Large') return 0.75;
+  return 1;
+};
+
+const scalePolygonFromCenter = (shape, factor) => {
+  if (!Array.isArray(shape) || shape.length === 0) return [];
+  const center = shape.reduce(
+    (acc, point) => ({ x: acc.x + point[0], y: acc.y + point[1] }),
+    { x: 0, y: 0 }
+  );
+  const cx = center.x / shape.length;
+  const cy = center.y / shape.length;
+  return shape.map(([x, y]) => [cx + (x - cx) * factor, cy + (y - cy) * factor]);
+};
+
+const createId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `id-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+};
+
+
 export const useUrbanStore = create((set) => ({
   buildings: [],
   selectedIds: [],
@@ -72,5 +96,53 @@ export const useUrbanStore = create((set) => ({
 
         return { ...building, [key]: value };
       })
-    }))
+    })),
+  generateBuildingsForSelectedPlots: ({ floors = 2, setback = 'Nil' } = {}) =>
+    set((state) => {
+      const plots = state.buildings.filter((item) => item.type === 'Plot');
+      const buildingsOnly = state.buildings.filter((item) => item.type === 'Building');
+      const selectedEmptyPlots = plots.filter(
+        (plot) => state.selectedIds.includes(plot.id) && (plot.isEmptyPlot || plot.buildingCount === 0)
+      );
+      if (selectedEmptyPlots.length === 0) return state;
+
+      const newBuildings = selectedEmptyPlots.map((plot) => {
+        const factor = getSetbackFactor(setback);
+        const shape = scalePolygonFromCenter(plot.shape || [], factor);
+
+        return normalizeBuildingEntity({
+          id: createId(),
+          type: 'Building',
+          layer: 'GENERATED',
+          shape,
+          areaSqm: plot.areaSqm ?? 0,
+          floors,
+          floorHeight: 3,
+          height: floors * 3,
+          setback,
+          landUseExisting: 'Residential',
+          macroLandUse: 'Residential',
+          microUses: [],
+          floorWiseLandUse: '',
+          buildingAge: '',
+          plotId: plot.id
+        });
+      });
+
+      const plotIdsWithNewBuildings = new Set(newBuildings.map((building) => building.plotId));
+      const nextBuildings = state.buildings.map((item) => {
+        if (item.type !== 'Plot' || !plotIdsWithNewBuildings.has(item.id)) return item;
+        const existingCount = item.buildingCount ?? buildingsOnly.filter((building) => building.plotId === item.id).length;
+        return {
+          ...item,
+          buildingCount: existingCount + 1,
+          isEmptyPlot: false
+        };
+      });
+
+      return {
+        buildings: [...nextBuildings, ...newBuildings],
+        selectedIds: Array.from(new Set([...state.selectedIds, ...newBuildings.map((item) => item.id)]))
+      };
+    })
 }));

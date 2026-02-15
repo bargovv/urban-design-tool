@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Settings2 } from 'lucide-react';
 import { formatArea } from '../utils/area.js';
 import { useUrbanStore } from '../store/useUrbanStore';
@@ -16,10 +17,22 @@ const Section = ({ title, children }) => (
   </div>
 );
 
+const coverageFromSetback = (setback) => {
+  if (setback === 'Minimum') return 0.95;
+  if (setback === 'Medium') return 0.85;
+  if (setback === 'Large') return 0.75;
+  return 1;
+};
+
 export default function PropertiesPanel() {
   const selectedIds = useUrbanStore((state) => state.selectedIds);
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
+  const generateBuildingsForSelectedPlots = useUrbanStore((state) => state.generateBuildingsForSelectedPlots);
+
+  const [newBuildingFloors, setNewBuildingFloors] = useState(2);
+  const [newBuildingSetback, setNewBuildingSetback] = useState('Nil');
+
   const selectedBuildings = buildings.filter(
     (building) => building.type === 'Building' && selectedIds.includes(building.id)
   );
@@ -49,6 +62,25 @@ export default function PropertiesPanel() {
   const sharedFloorWiseLandUse = getSharedValue('floorWiseLandUse');
   const sharedBuildingAge = getSharedValue('buildingAge');
 
+  const emptySelectedPlots = useMemo(() => selectedPlots.filter((plot) => plot.isEmptyPlot), [selectedPlots]);
+
+  const buildingFarDetails = useMemo(() => {
+    const plotsById = new Map(buildings.filter((item) => item.type === 'Plot').map((plot) => [plot.id, plot]));
+    return selectedBuildings.map((building) => {
+      const plot = plotsById.get(building.plotId);
+      const footprint = (building.areaSqm ?? 0) * coverageFromSetback(building.setback);
+      const gfa = footprint * (building.floors ?? 0);
+      const plotArea = plot?.areaSqm ?? 0;
+      const far = plotArea > 0 ? gfa / plotArea : null;
+      return {
+        id: building.id,
+        gfa,
+        plotArea,
+        far
+      };
+    });
+  }, [buildings, selectedBuildings]);
+
   const allSelectedFromDxfBuildings =
     selectedBuildings.length > 0 && selectedBuildings.every((building) => building.layer === 'BUILDINGS');
 
@@ -73,6 +105,40 @@ export default function PropertiesPanel() {
                   {totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}
                 </div>
               </Field>
+
+              {emptySelectedPlots.length > 0 && (
+                <>
+                  <Field label="Generate building: Floors">
+                    <input
+                      type="number"
+                      className="input"
+                      min="1"
+                      value={newBuildingFloors}
+                      onChange={(event) => setNewBuildingFloors(Math.max(1, Number(event.target.value || 1)))}
+                    />
+                  </Field>
+                  <Field label="Generate building: Setback">
+                    <select className="input" value={newBuildingSetback} onChange={(event) => setNewBuildingSetback(event.target.value)}>
+                      <option value="Nil">Nil</option>
+                      <option value="Minimum">Minimum</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Large">Large</option>
+                    </select>
+                  </Field>
+                  <button
+                    type="button"
+                    className="input action-button"
+                    onClick={() =>
+                      generateBuildingsForSelectedPlots({
+                        floors: Number(newBuildingFloors) || 1,
+                        setback: newBuildingSetback
+                      })
+                    }
+                  >
+                    Generate building for {emptySelectedPlots.length} empty plot(s)
+                  </button>
+                </>
+              )}
             </Section>
           )}
           {selectedBuildings.length === 0 ? (
@@ -153,6 +219,23 @@ export default function PropertiesPanel() {
                   />
                 </Field>
                 <div className="field-help">Micro data fields are UI-only for now; analytics logic will be added later.</div>
+              </Section>
+
+              <Section title="3. FAR (Selected Buildings)">
+                <div className="plot-far-list compact-list">
+                  {buildingFarDetails.map((item) => {
+                    const gfa = formatArea(item.gfa);
+                    const plotArea = formatArea(item.plotArea);
+                    return (
+                      <div key={item.id} className="plot-far-item">
+                        <div className="plot-far-head">Building {item.id}</div>
+                        <div>GFA: {gfa.value} {gfa.unit}</div>
+                        <div>Plot area: {plotArea.value} {plotArea.unit}</div>
+                        <div>FAR: {item.far == null ? '—' : item.far.toFixed(2)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
               </Section>
             </>
           )}
