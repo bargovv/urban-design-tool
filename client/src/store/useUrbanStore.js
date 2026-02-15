@@ -5,11 +5,15 @@ const normalizeBuildingEntity = (entity) => {
 
   const macroLandUse = entity.macroLandUse ?? entity.landUseExisting ?? 'Residential';
   const microUses = Array.isArray(entity.microUses) ? entity.microUses : [];
+  const floorWiseLandUse = entity.floorWiseLandUse ?? '';
+  const buildingAge = entity.buildingAge ?? '';
 
   return {
     ...entity,
     macroLandUse,
     microUses,
+    floorWiseLandUse,
+    buildingAge,
     landUseExisting: entity.landUseExisting ?? macroLandUse
   };
 };

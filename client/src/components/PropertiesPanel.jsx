@@ -40,12 +40,14 @@ export default function PropertiesPanel() {
     if (selectedBuildings.length === 0) return '';
     const [first, ...rest] = selectedBuildings;
     const shared = rest.every((building) => building[key] === first[key]);
-    return shared ? first[key] : '';
+    return shared ? (first[key] ?? '') : '';
   };
 
   const sharedFloors = getSharedValue('floors');
-  const sharedLandUse = getSharedValue('landUseExisting');
+  const sharedMacroLandUse = getSharedValue('macroLandUse');
   const sharedSetback = getSharedValue('setback');
+  const sharedFloorWiseLandUse = getSharedValue('floorWiseLandUse');
+  const sharedBuildingAge = getSharedValue('buildingAge');
 
   const allSelectedFromDxfBuildings =
     selectedBuildings.length > 0 && selectedBuildings.every((building) => building.layer === 'BUILDINGS');
@@ -67,7 +69,9 @@ export default function PropertiesPanel() {
                 </div>
               </Field>
               <Field label="Total plot area">
-                <div className="input input-static">{totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}</div>
+                <div className="input input-static">
+                  {totalPlotAreaFormatted.value} {totalPlotAreaFormatted.unit}
+                </div>
               </Field>
             </Section>
           )}
@@ -76,8 +80,8 @@ export default function PropertiesPanel() {
           ) : (
             <>
               <div className="panel-highlight">{selectedBuildings.length} Building(s) Selected</div>
-              <Section title="1. Physical & Use">
-                <Field label="Floors">
+              <Section title="1. Macro Data">
+                <Field label="Building Height (Floors)">
                   <input
                     type="number"
                     className="input"
@@ -92,8 +96,8 @@ export default function PropertiesPanel() {
                 <Field label="Land Use">
                   <select
                     className="input"
-                    value={sharedLandUse}
-                    onChange={(event) => updateSelection('landUseExisting', event.target.value)}
+                    value={sharedMacroLandUse}
+                    onChange={(event) => updateSelection('macroLandUse', event.target.value)}
                   >
                     <option value="" disabled>
                       Mixed selection
@@ -123,6 +127,32 @@ export default function PropertiesPanel() {
                 {allSelectedFromDxfBuildings && (
                   <div className="field-help">Setback is locked for imported BUILDINGS footprints.</div>
                 )}
+              </Section>
+
+              <Section title="2. Micro Data">
+                <Field label="Floor-wise Land Use">
+                  <textarea
+                    className="input"
+                    rows={3}
+                    placeholder="Example: G+1 Retail, 2-4 Residential"
+                    value={sharedFloorWiseLandUse}
+                    onChange={(event) => updateSelection('floorWiseLandUse', event.target.value)}
+                  />
+                </Field>
+                <Field label="Age of Building (years)">
+                  <input
+                    type="number"
+                    className="input"
+                    min="0"
+                    placeholder="15"
+                    value={sharedBuildingAge}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      updateSelection('buildingAge', nextValue === '' ? '' : Number(nextValue));
+                    }}
+                  />
+                </Field>
+                <div className="field-help">Micro data fields are UI-only for now; analytics logic will be added later.</div>
               </Section>
             </>
           )}

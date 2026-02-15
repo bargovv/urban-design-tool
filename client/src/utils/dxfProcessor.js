@@ -44,6 +44,8 @@ export const parseDxfData = (dxfString) => {
           landUseExisting: defaultLandUse,
           macroLandUse: isBuilding ? defaultLandUse : undefined,
           microUses: isBuilding ? [] : undefined,
+          floorWiseLandUse: isBuilding ? '' : undefined,
+          buildingAge: isBuilding ? '' : undefined,
           subLandUseExisting: '',
           subTypology1: '',
           subTypology2: '',
