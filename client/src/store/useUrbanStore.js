@@ -77,7 +77,7 @@ export const useUrbanStore = create((set) => ({
   selectionFilter: 'AUTO',
   viewMode: 'ISO',
   analysisTab: 'DEMO',
-  colorMode: 'USE',
+  colorMode: 'BUILDING_USE',
   setBuildings: (buildings) => set({ buildings: normalizeBuildings(buildings) }),
   setSelectionMode: (selectionMode) => set({ selectionMode }),
   setSelectionFilter: (selectionFilter) => set({ selectionFilter }),

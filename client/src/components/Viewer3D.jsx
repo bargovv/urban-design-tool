@@ -83,6 +83,24 @@ const getFloorCount = (data) => {
   return Math.max(1, floorsFromHeight, floorsFromCount);
 };
 
+
+const LAND_USE_COLORS = {
+  Residential: '#F8E71C',
+  Commercial: '#4A90E2',
+  Industrial: '#BD10E0',
+  Public: '#D0021B',
+  'Mixed Use': '#ff9800'
+};
+
+const getLandUseColor = (landUse) => LAND_USE_COLORS[landUse] || '#ffffff';
+
+const getAgeColor = (buildingAge) => {
+  const age = Number(buildingAge);
+  if (!Number.isFinite(age) || age < 0) return '#9ca3af';
+  return getColorByValue(age, 0, 80, 140, 10);
+};
+
+
 const EntityMesh = ({
   data,
   onToggle,
@@ -104,21 +122,9 @@ const EntityMesh = ({
     if (isRoad) return isSelected ? '#ff9800' : '#222';
     if (isVegetation) return '#7ED321';
     if (isPlot) return '#f5f5f5';
-    if (colorMode === 'USE') {
-      switch (data.landUseExisting) {
-        case 'Residential':
-          return '#F8E71C';
-        case 'Commercial':
-          return '#4A90E2';
-        case 'Industrial':
-          return '#BD10E0';
-        case 'Public':
-          return '#D0021B';
-        case 'Mixed Use':
-          return '#ff9800';
-        default:
-          return '#ffffff';
-      }
+
+    if (colorMode === 'BUILDING_USE' || colorMode === 'USE') {
+      return getLandUseColor(data.landUseExisting);
     }
     if (colorMode === 'HEIGHT') {
       const t = Math.min(1, data.floors / 12);
@@ -138,9 +144,12 @@ const EntityMesh = ({
       if (data.landUseExisting === 'Industrial') intensity = 350;
       return getColorByValue(intensity, 100, 350, 120, 0);
     }
+    if (colorMode === 'AGE') {
+      return getAgeColor(data.buildingAge);
+    }
 
     return '#fff';
-  }, [data.landUseExisting, data.floors, data.setback, colorMode, isRoad, isPlot, isVegetation, isSelected]);
+  }, [data.landUseExisting, data.floors, data.setback, data.buildingAge, colorMode, isRoad, isPlot, isVegetation, isSelected]);
 
   const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
@@ -222,6 +231,11 @@ const EntityMesh = ({
             const floorSelectionId = makeFloorSelectionId(data.id, index + 1);
             const isFloorSelected = selectedFloorIds.includes(floorSelectionId);
 
+            const floorLandUse =
+              data.microUses?.find((item) => Number(item?.floor) === index + 1)?.landUse ||
+              (data.landUseExisting === 'Mixed Use' ? 'Residential' : data.landUseExisting);
+            const floorColor = colorMode === 'FLOOR_USE' ? getLandUseColor(floorLandUse) : baseColor;
+
             return (
               <mesh
                 key={floorSelectionId}
@@ -261,7 +275,7 @@ const EntityMesh = ({
                     opacity={0.72}
                   />
                 ) : (
-                  <meshStandardMaterial color={baseColor} roughness={0.5} />
+                  <meshStandardMaterial color={floorColor} roughness={0.5} />
                 )}
                 <Edges color={isFloorSelected || isSelected ? '#fff' : 'rgba(0,0,0,0.35)'} threshold={15} />
               </mesh>

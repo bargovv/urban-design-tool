@@ -187,6 +187,10 @@ body {
   background: linear-gradient(to right, #4caf50, #f44336);
 }
 
+.legend-gradient-age {
+  background: linear-gradient(to right, #22c55e, #ef4444);
+}
+
 .sidebar {
   width: 750px;
   display: flex;

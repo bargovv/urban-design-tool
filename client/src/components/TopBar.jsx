@@ -78,7 +78,9 @@ export default function TopBar() {
         </div>
         <div className="topbar-divider" />
         <select className="topbar-select" value={colorMode} onChange={(event) => setColorMode(event.target.value)}>
-          <option value="USE">View: Land Use</option>
+          <option value="BUILDING_USE">View: Land Use - Building wise</option>
+          <option value="FLOOR_USE">View: Land Use - Floor wise</option>
+          <option value="AGE">View: Building Age</option>
           <option value="HEIGHT">View: Height</option>
           <option value="FAR">View: Density</option>
           <option value="ENERGY">View: Energy</option>

@@ -2,7 +2,9 @@ const modeLabel = (colorMode) => {
   if (colorMode === 'HEIGHT') return 'Height';
   if (colorMode === 'FAR') return 'Density';
   if (colorMode === 'ENERGY') return 'Energy';
-  return 'Land Use';
+  if (colorMode === 'AGE') return 'Building Age';
+  if (colorMode === 'FLOOR_USE') return 'Land Use (Floor wise)';
+  return 'Land Use (Building wise)';
 };
 
 const LANDUSE_META = {
@@ -14,7 +16,7 @@ const LANDUSE_META = {
 };
 
 export default function Legend({ colorMode, buildings }) {
-  const activeLandUses = Array.from(
+  const buildingLandUses = Array.from(
     new Set(
       (buildings || [])
         .filter((entity) => entity.type === 'Building')
@@ -23,13 +25,29 @@ export default function Legend({ colorMode, buildings }) {
     )
   );
 
-  const landUseList = activeLandUses.length > 0 ? activeLandUses : ['Residential', 'Commercial'];
+  const floorLandUses = Array.from(
+    new Set(
+      (buildings || [])
+        .filter((entity) => entity.type === 'Building')
+        .flatMap((entity) => (Array.isArray(entity.microUses) ? entity.microUses.map((item) => item?.landUse) : []))
+        .filter((landUse) => landUse && landUse !== 'Mixed Use')
+    )
+  );
+
+  const landUseList =
+    colorMode === 'FLOOR_USE'
+      ? floorLandUses.length > 0
+        ? floorLandUses
+        : ['Residential', 'Commercial']
+      : buildingLandUses.length > 0
+        ? buildingLandUses
+        : ['Residential', 'Commercial'];
 
   return (
     <div className="legend">
       <strong>Legend: {modeLabel(colorMode)}</strong>
       <div className="legend-items">
-        {colorMode === 'USE' && (
+        {(colorMode === 'BUILDING_USE' || colorMode === 'FLOOR_USE') && (
           <>
             {landUseList.map((landUse) => {
               const meta = LANDUSE_META[landUse] ?? { label: landUse, swatchClass: 'swatch-resi' };
@@ -44,6 +62,7 @@ export default function Legend({ colorMode, buildings }) {
         {colorMode === 'HEIGHT' && <div className="legend-gradient legend-gradient-height" />}
         {colorMode === 'FAR' && <div className="legend-gradient legend-gradient-far" />}
         {colorMode === 'ENERGY' && <div className="legend-gradient legend-gradient-energy" />}
+        {colorMode === 'AGE' && <div className="legend-gradient legend-gradient-age" />}
       </div>
     </div>
   );
