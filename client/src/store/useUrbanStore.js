@@ -129,6 +129,26 @@ export const useUrbanStore = create((set) => ({
             };
           }
 
+          if (key === 'floors') {
+            const nextFloors = Number(value) || 0;
+            const floorHeight = Number(building.floorHeight) > 0 ? Number(building.floorHeight) : 3;
+            return {
+              ...building,
+              floors: nextFloors,
+              height: nextFloors * floorHeight
+            };
+          }
+
+          if (key === 'height') {
+            const nextHeight = Number(value) || 0;
+            const floorHeight = Number(building.floorHeight) > 0 ? Number(building.floorHeight) : 3;
+            return {
+              ...building,
+              height: nextHeight,
+              floors: Math.max(0, Math.round(nextHeight / floorHeight))
+            };
+          }
+
           return { ...building, [key]: value };
         })
       };

@@ -77,9 +77,10 @@ const CameraController = ({ mode }) => {
 };
 
 const getFloorCount = (data) => {
-  const floorHeight = data.floorHeight || 3;
-  const heightMeters = Number(data.height) > 0 ? Number(data.height) : (Number(data.floors) || 0) * floorHeight;
-  return Math.max(1, Math.round(heightMeters / floorHeight));
+  const floorHeight = Number(data.floorHeight) > 0 ? Number(data.floorHeight) : 3;
+  const floorsFromHeight = Number(data.height) > 0 ? Math.round(Number(data.height) / floorHeight) : 0;
+  const floorsFromCount = Number(data.floors) > 0 ? Math.round(Number(data.floors)) : 0;
+  return Math.max(1, floorsFromHeight, floorsFromCount);
 };
 
 const EntityMesh = ({
