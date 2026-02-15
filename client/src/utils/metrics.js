@@ -6,7 +6,8 @@ const METRICS = {
   Residential: { pop: 35, energy: 150, water: 135, waste: 0.5, parking: 80 },
   Commercial: { job: 15, energy: 250, water: 40, waste: 0.1, parking: 50 },
   Industrial: { job: 50, energy: 350, water: 60, waste: 1.2, parking: 150 },
-  Public: { job: 25, energy: 200, water: 30, waste: 0.2, parking: 100 }
+  Public: { job: 25, energy: 200, water: 30, waste: 0.2, parking: 100 },
+  'Mixed Use': { job: 20, energy: 220, water: 80, waste: 0.3, parking: 70 }
 };
 
 
@@ -16,7 +17,7 @@ const getEffectiveLandUse = (building) => {
 
   if (Array.isArray(building.microUses) && building.microUses.length > 0) {
     const uniqueUses = Array.from(new Set(building.microUses.map((item) => item?.landUse).filter(Boolean)));
-    if (uniqueUses.length > 1) return 'Mixed';
+    if (uniqueUses.length > 1) return 'Mixed Use';
     if (uniqueUses.length === 1) return uniqueUses[0];
   }
 

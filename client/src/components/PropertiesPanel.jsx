@@ -28,6 +28,7 @@ export default function PropertiesPanel() {
   const selectedIds = useUrbanStore((state) => state.selectedIds);
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
+  const updateSelectedFloorsLandUse = useUrbanStore((state) => state.updateSelectedFloorsLandUse);
   const generateBuildingsForSelectedPlots = useUrbanStore((state) => state.generateBuildingsForSelectedPlots);
   const selectedFloorIds = useUrbanStore((state) => state.selectedFloorIds);
 
@@ -69,6 +70,24 @@ export default function PropertiesPanel() {
   const sharedSetback = getSharedValue('setback');
   const sharedFloorWiseLandUse = getSharedValue('floorWiseLandUse');
   const sharedBuildingAge = getSharedValue('buildingAge');
+
+  const selectedFloors = selectedFloorIds
+    .map((id) => parseFloorSelectionId(id))
+    .filter(Boolean);
+
+  const selectedFloorLandUse = (() => {
+    if (selectedFloors.length === 0) return '';
+    const values = selectedFloors
+      .map(({ buildingId, floorIndex }) => {
+        const building = buildings.find((item) => item.id === buildingId && item.type === 'Building');
+        const floorUse = building?.microUses?.find((item) => Number(item?.floor) === floorIndex)?.landUse;
+        return floorUse || building?.macroLandUse || building?.landUseExisting || 'Residential';
+      })
+      .filter(Boolean);
+    if (values.length === 0) return '';
+    const [first, ...rest] = values;
+    return rest.every((value) => value === first) ? first : '';
+  })();
 
   const emptySelectedPlots = useMemo(() => selectedPlots.filter((plot) => plot.isEmptyPlot), [selectedPlots]);
 
@@ -180,6 +199,7 @@ export default function PropertiesPanel() {
                     <option value="Commercial">Commercial</option>
                     <option value="Industrial">Industrial</option>
                     <option value="Public">Public</option>
+                    <option value="Mixed Use">Mixed Use</option>
                   </select>
                 </Field>
                 <Field label="Setback">
@@ -204,6 +224,24 @@ export default function PropertiesPanel() {
               </Section>
 
               <Section title="2. Micro Data">
+                {selectedFloors.length > 0 && (
+                  <Field label={`Selected Floor Land Use (${selectedFloors.length} floor${selectedFloors.length > 1 ? 's' : ''})`}>
+                    <select
+                      className="input"
+                      value={selectedFloorLandUse}
+                      onChange={(event) => updateSelectedFloorsLandUse(event.target.value)}
+                    >
+                      <option value="" disabled>
+                        Mixed selection
+                      </option>
+                      <option value="Residential">Residential</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Industrial">Industrial</option>
+                      <option value="Public">Public</option>
+                    </select>
+                  </Field>
+                )}
+
                 <Field label="Floor-wise Land Use">
                   <textarea
                     className="input"

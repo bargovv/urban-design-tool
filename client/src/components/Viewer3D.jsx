@@ -114,6 +114,8 @@ const EntityMesh = ({
           return '#BD10E0';
         case 'Public':
           return '#D0021B';
+        case 'Mixed Use':
+          return '#ff9800';
         default:
           return '#ffffff';
       }

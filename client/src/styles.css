@@ -166,6 +166,10 @@ body {
   background: #d0021b;
 }
 
+.swatch-mixed {
+  background: #ff9800;
+}
+
 .legend-gradient {
   width: 100px;
   height: 10px;

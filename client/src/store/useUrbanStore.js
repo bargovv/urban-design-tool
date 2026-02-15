@@ -13,11 +13,24 @@ export const parseFloorSelectionId = (id) => {
   return { buildingId, floorIndex };
 };
 
+const resolveMacroLandUse = (microUses, fallbackUse = 'Residential') => {
+  const uniqueUses = Array.from(new Set((microUses || []).map((item) => item?.landUse).filter(Boolean)));
+  if (uniqueUses.length > 1) return 'Mixed Use';
+  if (uniqueUses.length === 1) return uniqueUses[0];
+  return fallbackUse;
+};
+
 const normalizeBuildingEntity = (entity) => {
   if (!entity || entity.type !== 'Building') return entity;
 
-  const macroLandUse = entity.macroLandUse ?? entity.landUseExisting ?? 'Residential';
-  const microUses = Array.isArray(entity.microUses) ? entity.microUses : [];
+  const microUses = Array.isArray(entity.microUses)
+    ? entity.microUses
+        .map((item) => ({ floor: Number(item?.floor), landUse: item?.landUse }))
+        .filter((item) => Number.isFinite(item.floor) && item.floor > 0 && item.landUse)
+    : [];
+
+  const fallbackUse = entity.macroLandUse ?? entity.landUseExisting ?? 'Residential';
+  const macroLandUse = resolveMacroLandUse(microUses, fallbackUse);
   const floorWiseLandUse = entity.floorWiseLandUse ?? '';
   const buildingAge = entity.buildingAge ?? '';
 
@@ -27,7 +40,7 @@ const normalizeBuildingEntity = (entity) => {
     microUses,
     floorWiseLandUse,
     buildingAge,
-    landUseExisting: entity.landUseExisting ?? macroLandUse
+    landUseExisting: macroLandUse
   };
 };
 
@@ -98,6 +111,49 @@ export const useUrbanStore = create((set) => ({
         };
       }
       return { selectedFloorIds: [floorId], selectedIds: [] };
+    }),
+  updateSelectedFloorsLandUse: (landUse) =>
+    set((state) => {
+      if (!landUse) return state;
+
+      const selectedFloorTargets = state.selectedFloorIds
+        .map((id) => parseFloorSelectionId(id))
+        .filter(Boolean)
+        .reduce((acc, entry) => {
+          if (!acc[entry.buildingId]) acc[entry.buildingId] = new Set();
+          acc[entry.buildingId].add(entry.floorIndex);
+          return acc;
+        }, {});
+
+      if (Object.keys(selectedFloorTargets).length === 0) return state;
+
+      return {
+        buildings: state.buildings.map((building) => {
+          if (building.type !== 'Building') return building;
+          const floorsSet = selectedFloorTargets[building.id];
+          if (!floorsSet) return building;
+
+          const nextMicroUses = Array.isArray(building.microUses) ? [...building.microUses] : [];
+
+          floorsSet.forEach((floorIndex) => {
+            const existingIndex = nextMicroUses.findIndex((item) => Number(item?.floor) === floorIndex);
+            if (existingIndex >= 0) {
+              nextMicroUses[existingIndex] = { ...nextMicroUses[existingIndex], floor: floorIndex, landUse };
+            } else {
+              nextMicroUses.push({ floor: floorIndex, landUse });
+            }
+          });
+
+          const macroLandUse = resolveMacroLandUse(nextMicroUses, building.macroLandUse || building.landUseExisting || 'Residential');
+
+          return {
+            ...building,
+            microUses: nextMicroUses,
+            macroLandUse,
+            landUseExisting: macroLandUse
+          };
+        })
+      };
     }),
   updateSelection: (key, value) =>
     set((state) => {

@@ -9,7 +9,8 @@ const LANDUSE_META = {
   Residential: { label: 'Resi', swatchClass: 'swatch-resi' },
   Commercial: { label: 'Com', swatchClass: 'swatch-com' },
   Industrial: { label: 'Ind', swatchClass: 'swatch-ind' },
-  Public: { label: 'Public', swatchClass: 'swatch-public' }
+  Public: { label: 'Public', swatchClass: 'swatch-public' },
+  'Mixed Use': { label: 'Mixed', swatchClass: 'swatch-mixed' }
 };
 
 export default function Legend({ colorMode, buildings }) {
