@@ -19,6 +19,11 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
+
+app.get('/favicon.ico', (_req, res) => {
+  res.status(204).end();
+});
+
 app.get('/api/plots', async (_req, res, next) => {
   try {
     const raw = await readFile(path.join(rootDir, 'plots.geojson'), 'utf8');
