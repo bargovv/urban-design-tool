@@ -12,7 +12,8 @@ const LANDUSE_META = {
   Commercial: { label: 'Com', swatchClass: 'swatch-com' },
   Industrial: { label: 'Ind', swatchClass: 'swatch-ind' },
   Public: { label: 'Public', swatchClass: 'swatch-public' },
-  'Mixed Use': { label: 'Mixed', swatchClass: 'swatch-mixed' }
+  'Mixed Use': { label: 'Mixed', swatchClass: 'swatch-mixed' },
+  'Parks and Open Spaces': { label: 'Parks/Open', swatchClass: 'swatch-parks' }
 };
 
 export default function Legend({ colorMode, buildings }) {

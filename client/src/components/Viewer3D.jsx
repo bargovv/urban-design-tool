@@ -80,6 +80,7 @@ const getFloorCount = (data) => {
   const floorHeight = Number(data.floorHeight) > 0 ? Number(data.floorHeight) : 3;
   const floorsFromHeight = Number(data.height) > 0 ? Math.round(Number(data.height) / floorHeight) : 0;
   const floorsFromCount = Number(data.floors) > 0 ? Math.round(Number(data.floors)) : 0;
+  if (data.landUseExisting === 'Parks and Open Spaces' || data.macroLandUse === 'Parks and Open Spaces') return 0;
   return Math.max(1, floorsFromHeight, floorsFromCount);
 };
 
@@ -89,7 +90,8 @@ const LAND_USE_COLORS = {
   Commercial: '#4A90E2',
   Industrial: '#BD10E0',
   Public: '#D0021B',
-  'Mixed Use': '#ff9800'
+  'Mixed Use': '#ff9800',
+  'Parks and Open Spaces': '#22c55e'
 };
 
 const getLandUseColor = (landUse) => LAND_USE_COLORS[landUse] || '#ffffff';
@@ -117,6 +119,11 @@ const EntityMesh = ({
   const isPlot = data.type === 'Plot';
   const isVegetation = data.type === 'Vegetation';
   const isBuilding = data.type === 'Building';
+
+  const isPlotParks =
+    isPlot &&
+    (data.landUseExisting === 'Parks and Open Spaces' ||
+      buildings.some((item) => item.type === 'Building' && item.plotId === data.id && item.landUseExisting === 'Parks and Open Spaces'));
 
   const baseColor = useMemo(() => {
     if (isRoad) return isSelected ? '#ff9800' : '#222';
@@ -205,7 +212,7 @@ const EntityMesh = ({
         onPointerOut={() => (document.body.style.cursor = 'auto')}
       >
         <shapeGeometry args={[plotShape]} />
-        <meshBasicMaterial color={isSelected ? '#ff9800' : '#000'} transparent opacity={isSelected ? 0.2 : 0.05} />
+        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : isPlotParks ? 0.35 : 0.05} />
         <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
       </mesh>
 

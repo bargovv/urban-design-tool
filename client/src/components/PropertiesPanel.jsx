@@ -29,6 +29,7 @@ export default function PropertiesPanel() {
   const buildings = useUrbanStore((state) => state.buildings);
   const updateSelection = useUrbanStore((state) => state.updateSelection);
   const updateSelectedFloorsLandUse = useUrbanStore((state) => state.updateSelectedFloorsLandUse);
+  const updateSelectedPlotsLandUse = useUrbanStore((state) => state.updateSelectedPlotsLandUse);
   const generateBuildingsForSelectedPlots = useUrbanStore((state) => state.generateBuildingsForSelectedPlots);
   const selectedFloorIds = useUrbanStore((state) => state.selectedFloorIds);
 
@@ -57,6 +58,13 @@ export default function PropertiesPanel() {
         ? 'Empty plot'
         : 'Occupied plot'
       : `${emptyPlotsCount} empty`;
+
+  const sharedPlotLandUse = (() => {
+    if (selectedPlots.length === 0) return '';
+    const values = selectedPlots.map((plot) => plot.landUseExisting || 'Residential');
+    const [first, ...rest] = values;
+    return rest.every((value) => value === first) ? first : '';
+  })();
 
   const getSharedValue = (key) => {
     if (selectedBuildings.length === 0) return '';
@@ -133,6 +141,23 @@ export default function PropertiesPanel() {
                 </div>
               </Field>
 
+              <Field label="Plot Land Use">
+                <select
+                  className="input"
+                  value={sharedPlotLandUse}
+                  onChange={(event) => updateSelectedPlotsLandUse(event.target.value)}
+                >
+                  <option value="" disabled>
+                    Mixed selection
+                  </option>
+                  <option value="Residential">Residential</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Industrial">Industrial</option>
+                  <option value="Public">Public</option>
+                  <option value="Parks and Open Spaces">Parks and Open Spaces</option>
+                </select>
+              </Field>
+
               {emptySelectedPlots.length > 0 && (
                 <>
                   <Field label="Generate building: Floors">
@@ -200,6 +225,7 @@ export default function PropertiesPanel() {
                     <option value="Industrial">Industrial</option>
                     <option value="Public">Public</option>
                     <option value="Mixed Use">Mixed Use</option>
+                    <option value="Parks and Open Spaces">Parks and Open Spaces</option>
                   </select>
                 </Field>
                 <Field label="Setback">
@@ -238,6 +264,7 @@ export default function PropertiesPanel() {
                       <option value="Commercial">Commercial</option>
                       <option value="Industrial">Industrial</option>
                       <option value="Public">Public</option>
+                      <option value="Parks and Open Spaces">Parks and Open Spaces</option>
                     </select>
                   </Field>
                 )}

@@ -13,6 +13,8 @@ export const parseFloorSelectionId = (id) => {
   return { buildingId, floorIndex };
 };
 
+const PARKS_LAND_USE = 'Parks and Open Spaces';
+
 const resolveMacroLandUse = (microUses, fallbackUse = 'Residential') => {
   const uniqueUses = Array.from(new Set((microUses || []).map((item) => item?.landUse).filter(Boolean)));
   if (uniqueUses.length > 1) return 'Mixed Use';
@@ -33,6 +35,19 @@ const normalizeBuildingEntity = (entity) => {
   const macroLandUse = resolveMacroLandUse(microUses, fallbackUse);
   const floorWiseLandUse = entity.floorWiseLandUse ?? '';
   const buildingAge = entity.buildingAge ?? '';
+
+  if (macroLandUse === PARKS_LAND_USE) {
+    return {
+      ...entity,
+      macroLandUse,
+      microUses: [],
+      floorWiseLandUse,
+      buildingAge,
+      floors: 0,
+      height: 0,
+      landUseExisting: macroLandUse
+    };
+  }
 
   return {
     ...entity,
@@ -155,6 +170,47 @@ export const useUrbanStore = create((set) => ({
         })
       };
     }),
+  updateSelectedPlotsLandUse: (landUse) =>
+    set((state) => {
+      if (!landUse) return state;
+      const selectedPlotIds = new Set(
+        state.buildings
+          .filter((item) => item.type === 'Plot' && state.selectedIds.includes(item.id))
+          .map((plot) => plot.id)
+      );
+      if (selectedPlotIds.size === 0) return state;
+
+      return {
+        buildings: state.buildings.map((item) => {
+          if (item.type === 'Plot' && selectedPlotIds.has(item.id)) {
+            return {
+              ...item,
+              landUseExisting: landUse
+            };
+          }
+
+          if (item.type === 'Building' && selectedPlotIds.has(item.plotId)) {
+            if (landUse === PARKS_LAND_USE) {
+              return {
+                ...item,
+                macroLandUse: PARKS_LAND_USE,
+                landUseExisting: PARKS_LAND_USE,
+                floors: 0,
+                height: 0,
+                microUses: []
+              };
+            }
+            return {
+              ...item,
+              macroLandUse: landUse,
+              landUseExisting: landUse
+            };
+          }
+
+          return item;
+        })
+      };
+    }),
   updateSelection: (key, value) =>
     set((state) => {
       const selectedBuildingIdsFromFloors = new Set(
@@ -170,6 +226,16 @@ export const useUrbanStore = create((set) => ({
           if (building.type !== 'Building') return { ...building, [key]: value };
 
           if (key === 'landUseExisting') {
+            if (value === PARKS_LAND_USE) {
+              return {
+                ...building,
+                landUseExisting: value,
+                macroLandUse: value,
+                floors: 0,
+                height: 0,
+                microUses: []
+              };
+            }
             return {
               ...building,
               landUseExisting: value,
@@ -178,6 +244,16 @@ export const useUrbanStore = create((set) => ({
           }
 
           if (key === 'macroLandUse') {
+            if (value === PARKS_LAND_USE) {
+              return {
+                ...building,
+                macroLandUse: value,
+                landUseExisting: value,
+                floors: 0,
+                height: 0,
+                microUses: []
+              };
+            }
             return {
               ...building,
               macroLandUse: value,

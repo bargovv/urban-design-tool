@@ -7,7 +7,8 @@ const METRICS = {
   Commercial: { job: 15, energy: 250, water: 40, waste: 0.1, parking: 50 },
   Industrial: { job: 50, energy: 350, water: 60, waste: 1.2, parking: 150 },
   Public: { job: 25, energy: 200, water: 30, waste: 0.2, parking: 100 },
-  'Mixed Use': { job: 20, energy: 220, water: 80, waste: 0.3, parking: 70 }
+  'Mixed Use': { job: 20, energy: 220, water: 80, waste: 0.3, parking: 70 },
+  'Parks and Open Spaces': { job: 0, energy: 20, water: 10, waste: 0.05, parking: 400 }
 };
 
 
