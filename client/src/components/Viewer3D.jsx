@@ -113,7 +113,9 @@ const EntityMesh = ({
   selectionFilter,
   buildings,
   onBlockSelect,
-  colorMode
+  colorMode,
+  filterBuildingLandUse,
+  filterFloorLandUse
 }) => {
   const isRoad = data.type === 'Road';
   const isPlot = data.type === 'Plot';
@@ -124,6 +126,15 @@ const EntityMesh = ({
     isPlot &&
     (data.landUseExisting === 'Parks and Open Spaces' ||
       buildings.some((item) => item.type === 'Building' && item.plotId === data.id && item.landUseExisting === 'Parks and Open Spaces'));
+
+  const isBuildingLandUseMatch =
+    filterBuildingLandUse === 'ALL' ||
+    !isBuilding ||
+    data.landUseExisting === filterBuildingLandUse;
+
+  const hasFloorLandUseFilter = filterFloorLandUse !== 'ALL';
+  const hasBuildingLandUseFilter = filterBuildingLandUse !== 'ALL';
+  const hasAnyLandUseFilter = hasBuildingLandUseFilter || hasFloorLandUseFilter;
 
   const baseColor = useMemo(() => {
     if (isRoad) return isSelected ? '#ff9800' : '#222';
@@ -156,7 +167,7 @@ const EntityMesh = ({
     }
 
     return '#fff';
-  }, [data.landUseExisting, data.floors, data.setback, data.buildingAge, colorMode, isRoad, isPlot, isVegetation, isSelected]);
+  }, [data.landUseExisting, data.floors, data.setback, data.buildingAge, colorMode, isRoad, isPlot, isVegetation, isSelected, filterBuildingLandUse, filterFloorLandUse]);
 
   const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
@@ -212,7 +223,7 @@ const EntityMesh = ({
         onPointerOut={() => (document.body.style.cursor = 'auto')}
       >
         <shapeGeometry args={[plotShape]} />
-        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : isPlotParks ? 0.35 : 0.05} />
+        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : hasAnyLandUseFilter ? 0.02 : isPlotParks ? 0.35 : 0.05} />
         <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
       </mesh>
 
@@ -227,7 +238,7 @@ const EntityMesh = ({
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
-          <meshStandardMaterial color={baseColor} roughness={0.5} />
+          <meshStandardMaterial color={baseColor} roughness={0.5} transparent opacity={hasAnyLandUseFilter ? 0.12 : 1} />
           <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
         </mesh>
       )}
@@ -242,6 +253,9 @@ const EntityMesh = ({
               data.microUses?.find((item) => Number(item?.floor) === index + 1)?.landUse ||
               (data.landUseExisting === 'Mixed Use' ? 'Residential' : data.landUseExisting);
             const floorColor = colorMode === 'FLOOR_USE' ? getLandUseColor(floorLandUse) : baseColor;
+            const isFloorLandUseMatch = filterFloorLandUse === 'ALL' || floorLandUse === filterFloorLandUse;
+            const isVisibleByFilter = isBuildingLandUseMatch && isFloorLandUseMatch;
+            const ghostOpacity = hasAnyLandUseFilter && !isVisibleByFilter ? 0.12 : 1;
 
             return (
               <mesh
@@ -282,7 +296,7 @@ const EntityMesh = ({
                     opacity={0.72}
                   />
                 ) : (
-                  <meshStandardMaterial color={floorColor} roughness={0.5} />
+                  <meshStandardMaterial color={floorColor} roughness={0.5} transparent opacity={ghostOpacity} />
                 )}
                 <Edges color={isFloorSelected || isSelected ? '#fff' : 'rgba(0,0,0,0.35)'} threshold={15} />
               </mesh>
@@ -305,7 +319,9 @@ export default function Viewer3D({
   selectionMode,
   selectionFilter,
   onBlockSelect,
-  colorMode
+  colorMode,
+  filterBuildingLandUse,
+  filterFloorLandUse
 }) {
   return (
     <div className="viewer-canvas">
@@ -335,6 +351,8 @@ export default function Viewer3D({
             buildings={buildings}
             onBlockSelect={onBlockSelect}
             colorMode={colorMode}
+            filterBuildingLandUse={filterBuildingLandUse}
+            filterFloorLandUse={filterFloorLandUse}
           />
         ))}
         <ContactShadows resolution={1024} scale={500} blur={2} opacity={0.4} color="#000" />
