@@ -95,6 +95,12 @@ export const useUrbanStore = create((set) => ({
   colorMode: 'BUILDING_USE',
   filterBuildingLandUse: 'ALL',
   filterFloorLandUse: 'ALL',
+  numericFilters: {
+    height: [null, null],
+    density: [null, null],
+    energy: [null, null],
+    age: [null, null]
+  },
   setBuildings: (buildings) => set({ buildings: normalizeBuildings(buildings) }),
   setSelectionMode: (selectionMode) => set({ selectionMode }),
   setSelectionFilter: (selectionFilter) => set({ selectionFilter }),
@@ -103,6 +109,24 @@ export const useUrbanStore = create((set) => ({
   setColorMode: (colorMode) => set({ colorMode }),
   setFilterBuildingLandUse: (filterBuildingLandUse) => set({ filterBuildingLandUse }),
   setFilterFloorLandUse: (filterFloorLandUse) => set({ filterFloorLandUse }),
+  setNumericFilterRange: (metricKey, range) =>
+    set((state) => ({
+      numericFilters: {
+        ...state.numericFilters,
+        [metricKey]: range
+      }
+    })),
+  resetFilters: () =>
+    set({
+      filterBuildingLandUse: 'ALL',
+      filterFloorLandUse: 'ALL',
+      numericFilters: {
+        height: [null, null],
+        density: [null, null],
+        energy: [null, null],
+        age: [null, null]
+      }
+    }),
   clearSelection: () => set({ selectedIds: [], selectedFloorIds: [] }),
   blockSelect: (ids) => set({ selectedIds: ids, selectedFloorIds: [] }),
   toggleSelection: (id, isMulti) =>

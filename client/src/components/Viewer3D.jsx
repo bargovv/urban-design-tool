@@ -102,6 +102,28 @@ const getAgeColor = (buildingAge) => {
   return getColorByValue(age, 0, 80, 140, 10);
 };
 
+const getDensityValue = (building) => {
+  let coverage = 1;
+  if (building.setback === 'Minimum') coverage = 0.95;
+  if (building.setback === 'Medium') coverage = 0.85;
+  if (building.setback === 'Large') coverage = 0.75;
+  return (Number(building.floors) || 0) * coverage;
+};
+
+const getEnergyValue = (building) => {
+  if (building.landUseExisting === 'Commercial') return 250;
+  if (building.landUseExisting === 'Industrial') return 350;
+  if (building.landUseExisting === 'Public') return 200;
+  if (building.landUseExisting === 'Parks and Open Spaces') return 20;
+  return 150;
+};
+
+const inRange = (value, [min, max]) => {
+  if (min != null && value < min) return false;
+  if (max != null && value > max) return false;
+  return true;
+};
+
 
 const EntityMesh = ({
   data,
@@ -115,7 +137,8 @@ const EntityMesh = ({
   onBlockSelect,
   colorMode,
   filterBuildingLandUse,
-  filterFloorLandUse
+  filterFloorLandUse,
+  numericFilters
 }) => {
   const isRoad = data.type === 'Road';
   const isPlot = data.type === 'Plot';
@@ -132,9 +155,17 @@ const EntityMesh = ({
     !isBuilding ||
     data.landUseExisting === filterBuildingLandUse;
 
+  const isNumericMatch =
+    !isBuilding ||
+    (inRange(Number(data.height) || 0, numericFilters.height) &&
+      inRange(getDensityValue(data), numericFilters.density) &&
+      inRange(getEnergyValue(data), numericFilters.energy) &&
+      inRange(Number(data.buildingAge) || 0, numericFilters.age));
+
   const hasFloorLandUseFilter = filterFloorLandUse !== 'ALL';
   const hasBuildingLandUseFilter = filterBuildingLandUse !== 'ALL';
-  const hasAnyLandUseFilter = hasBuildingLandUseFilter || hasFloorLandUseFilter;
+  const hasNumericFilter = Object.values(numericFilters).some(([min, max]) => min != null || max != null);
+  const hasAnyFilter = hasBuildingLandUseFilter || hasFloorLandUseFilter || hasNumericFilter;
 
   const baseColor = useMemo(() => {
     if (isRoad) return isSelected ? '#ff9800' : '#222';
@@ -167,7 +198,7 @@ const EntityMesh = ({
     }
 
     return '#fff';
-  }, [data.landUseExisting, data.floors, data.setback, data.buildingAge, colorMode, isRoad, isPlot, isVegetation, isSelected, filterBuildingLandUse, filterFloorLandUse]);
+  }, [data.landUseExisting, data.floors, data.setback, data.buildingAge, colorMode, isRoad, isPlot, isVegetation, isSelected]);
 
   const currentHeight = isRoad ? 0.05 : isVegetation ? 0.2 : data.floors * data.floorHeight;
 
@@ -223,7 +254,7 @@ const EntityMesh = ({
         onPointerOut={() => (document.body.style.cursor = 'auto')}
       >
         <shapeGeometry args={[plotShape]} />
-        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : hasAnyLandUseFilter ? 0.02 : isPlotParks ? 0.35 : 0.05} />
+        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : hasAnyFilter ? 0.02 : isPlotParks ? 0.35 : 0.05} />
         <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
       </mesh>
 
@@ -238,7 +269,7 @@ const EntityMesh = ({
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
-          <meshStandardMaterial color={baseColor} roughness={0.5} transparent opacity={hasAnyLandUseFilter ? 0.12 : 1} />
+          <meshStandardMaterial color={baseColor} roughness={0.5} transparent opacity={hasAnyFilter ? 0.12 : 1} />
           <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
         </mesh>
       )}
@@ -254,8 +285,8 @@ const EntityMesh = ({
               (data.landUseExisting === 'Mixed Use' ? 'Residential' : data.landUseExisting);
             const floorColor = colorMode === 'FLOOR_USE' ? getLandUseColor(floorLandUse) : baseColor;
             const isFloorLandUseMatch = filterFloorLandUse === 'ALL' || floorLandUse === filterFloorLandUse;
-            const isVisibleByFilter = isBuildingLandUseMatch && isFloorLandUseMatch;
-            const ghostOpacity = hasAnyLandUseFilter && !isVisibleByFilter ? 0.12 : 1;
+            const isVisibleByFilter = isBuildingLandUseMatch && isFloorLandUseMatch && isNumericMatch;
+            const ghostOpacity = hasAnyFilter && !isVisibleByFilter ? 0.12 : 1;
 
             return (
               <mesh
@@ -321,7 +352,8 @@ export default function Viewer3D({
   onBlockSelect,
   colorMode,
   filterBuildingLandUse,
-  filterFloorLandUse
+  filterFloorLandUse,
+  numericFilters
 }) {
   return (
     <div className="viewer-canvas">
@@ -353,6 +385,7 @@ export default function Viewer3D({
             colorMode={colorMode}
             filterBuildingLandUse={filterBuildingLandUse}
             filterFloorLandUse={filterFloorLandUse}
+            numericFilters={numericFilters}
           />
         ))}
         <ContactShadows resolution={1024} scale={500} blur={2} opacity={0.4} color="#000" />

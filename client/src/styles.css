@@ -108,6 +108,42 @@ body {
   overflow: hidden;
 }
 
+.filters-sidebar {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.filters-sidebar h3 {
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-range-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.filter-range-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  margin-bottom: 8px;
+}
+
+.filter-range-track {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .viewer {
   flex: 1;
   position: relative;
@@ -474,6 +510,16 @@ body {
 }
 
 @media (max-width: 1200px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .filters-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
   .sidebar {
     width: 100%;
     flex-direction: column;

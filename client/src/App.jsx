@@ -3,6 +3,7 @@ import Viewer3D from './components/Viewer3D';
 import Legend from './components/Legend';
 import PropertiesPanel from './components/PropertiesPanel';
 import InsightsPanel from './components/InsightsPanel';
+import FiltersSidebar from './components/FiltersSidebar';
 import TopBar from './components/TopBar';
 import { parseFloorSelectionId, useUrbanStore } from './store/useUrbanStore';
 import { calculateStats } from './utils/metrics';
@@ -18,6 +19,7 @@ export default function App() {
   const colorMode = useUrbanStore((state) => state.colorMode);
   const filterBuildingLandUse = useUrbanStore((state) => state.filterBuildingLandUse);
   const filterFloorLandUse = useUrbanStore((state) => state.filterFloorLandUse);
+  const numericFilters = useUrbanStore((state) => state.numericFilters);
   const toggleSelection = useUrbanStore((state) => state.toggleSelection);
   const toggleFloorSelection = useUrbanStore((state) => state.toggleFloorSelection);
   const clearSelection = useUrbanStore((state) => state.clearSelection);
@@ -52,6 +54,7 @@ export default function App() {
     <div className="app-shell">
       <TopBar />
       <div className="app-body">
+        <FiltersSidebar />
         <section className="viewer">
           <Viewer3D
             buildings={buildings}
@@ -67,6 +70,7 @@ export default function App() {
             colorMode={colorMode}
             filterBuildingLandUse={filterBuildingLandUse}
             filterFloorLandUse={filterFloorLandUse}
+            numericFilters={numericFilters}
           />
           <Legend colorMode={colorMode} buildings={buildings} />
         </section>
