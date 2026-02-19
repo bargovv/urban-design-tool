@@ -138,6 +138,7 @@ const EntityMesh = ({
   colorMode,
   filterBuildingLandUses,
   filterFloorLandUses,
+  filterDisplayMode,
   numericFilters
 }) => {
   const isRoad = data.type === 'Road';
@@ -166,6 +167,7 @@ const EntityMesh = ({
   const hasBuildingLandUseFilter = filterBuildingLandUses.length > 0;
   const hasNumericFilter = Object.values(numericFilters).some(([min, max]) => min != null || max != null);
   const hasAnyFilter = hasBuildingLandUseFilter || hasFloorLandUseFilter || hasNumericFilter;
+  const useGhostMode = filterDisplayMode === 'GHOST';
 
   const baseColor = useMemo(() => {
     if (isRoad) return isSelected ? '#ff9800' : '#222';
@@ -244,6 +246,8 @@ const EntityMesh = ({
   const floorHeight = data.floorHeight || 3;
   const floorDepth = Math.max(0.1, floorHeight * 0.92);
 
+  const hiddenOpacity = useGhostMode ? 0.12 : 0;
+
   return (
     <group>
       <mesh
@@ -254,8 +258,8 @@ const EntityMesh = ({
         onPointerOut={() => (document.body.style.cursor = 'auto')}
       >
         <shapeGeometry args={[plotShape]} />
-        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : hasAnyFilter ? 0.02 : isPlotParks ? 0.35 : 0.05} />
-        <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />
+        <meshBasicMaterial color={isSelected ? '#ff9800' : isPlotParks ? '#22c55e' : '#000'} transparent opacity={isSelected ? 0.25 : hasAnyFilter ? (useGhostMode ? 0.02 : 0) : isPlotParks ? 0.35 : 0.05} />
+        {!hasAnyFilter && <Edges color={isSelected ? '#ff9800' : '#ccc'} threshold={15} />}
       </mesh>
 
       {!isPlot && !isBuilding && (
@@ -269,8 +273,8 @@ const EntityMesh = ({
           onPointerOut={() => (document.body.style.cursor = 'auto')}
         >
           <extrudeGeometry args={[buildingShape, { depth: currentHeight, bevelEnabled: false }]} />
-          <meshStandardMaterial color={baseColor} roughness={0.5} transparent opacity={hasAnyFilter ? 0.12 : 1} />
-          <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />
+          <meshStandardMaterial color={baseColor} roughness={0.5} transparent opacity={hasAnyFilter ? hiddenOpacity : 1} />
+          {!hasAnyFilter && <Edges color={isSelected ? '#fff' : 'rgba(0,0,0,0.3)'} threshold={15} />}
         </mesh>
       )}
 
@@ -286,7 +290,8 @@ const EntityMesh = ({
             const floorColor = colorMode === 'FLOOR_USE' ? getLandUseColor(floorLandUse) : baseColor;
             const isFloorLandUseMatch = filterFloorLandUses.length === 0 || filterFloorLandUses.includes(floorLandUse);
             const isVisibleByFilter = isBuildingLandUseMatch && isFloorLandUseMatch && isNumericMatch;
-            const ghostOpacity = hasAnyFilter && !isVisibleByFilter ? 0.12 : 1;
+            const isGhosted = hasAnyFilter && !isVisibleByFilter;
+            const ghostOpacity = isGhosted ? hiddenOpacity : 1;
 
             return (
               <mesh
@@ -329,7 +334,7 @@ const EntityMesh = ({
                 ) : (
                   <meshStandardMaterial color={floorColor} roughness={0.5} transparent opacity={ghostOpacity} />
                 )}
-                <Edges color={isFloorSelected || isSelected ? '#fff' : 'rgba(0,0,0,0.35)'} threshold={15} />
+                {!isGhosted && <Edges color={isFloorSelected || isSelected ? '#fff' : 'rgba(0,0,0,0.35)'} threshold={15} />}
               </mesh>
             );
           })}
@@ -353,6 +358,7 @@ export default function Viewer3D({
   colorMode,
   filterBuildingLandUses,
   filterFloorLandUses,
+  filterDisplayMode,
   numericFilters
 }) {
   return (
@@ -385,6 +391,7 @@ export default function Viewer3D({
             colorMode={colorMode}
             filterBuildingLandUses={filterBuildingLandUses}
             filterFloorLandUses={filterFloorLandUses}
+            filterDisplayMode={filterDisplayMode}
             numericFilters={numericFilters}
           />
         ))}

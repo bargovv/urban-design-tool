@@ -19,6 +19,7 @@ export default function App() {
   const colorMode = useUrbanStore((state) => state.colorMode);
   const filterBuildingLandUses = useUrbanStore((state) => state.filterBuildingLandUses);
   const filterFloorLandUses = useUrbanStore((state) => state.filterFloorLandUses);
+  const filterDisplayMode = useUrbanStore((state) => state.filterDisplayMode);
   const numericFilters = useUrbanStore((state) => state.numericFilters);
   const toggleSelection = useUrbanStore((state) => state.toggleSelection);
   const toggleFloorSelection = useUrbanStore((state) => state.toggleFloorSelection);
@@ -70,6 +71,7 @@ export default function App() {
             colorMode={colorMode}
             filterBuildingLandUses={filterBuildingLandUses}
             filterFloorLandUses={filterFloorLandUses}
+            filterDisplayMode={filterDisplayMode}
             numericFilters={numericFilters}
           />
           <Legend colorMode={colorMode} buildings={buildings} />

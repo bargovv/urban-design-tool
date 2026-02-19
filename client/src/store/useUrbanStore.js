@@ -95,6 +95,7 @@ export const useUrbanStore = create((set) => ({
   colorMode: 'BUILDING_USE',
   filterBuildingLandUses: [],
   filterFloorLandUses: [],
+  filterDisplayMode: 'GHOST',
   numericFilters: {
     height: [null, null],
     density: [null, null],
@@ -109,6 +110,7 @@ export const useUrbanStore = create((set) => ({
   setColorMode: (colorMode) => set({ colorMode }),
   setFilterBuildingLandUses: (filterBuildingLandUses) => set({ filterBuildingLandUses }),
   setFilterFloorLandUses: (filterFloorLandUses) => set({ filterFloorLandUses }),
+  setFilterDisplayMode: (filterDisplayMode) => set({ filterDisplayMode }),
   setNumericFilterRange: (metricKey, range) =>
     set((state) => ({
       numericFilters: {
@@ -120,6 +122,7 @@ export const useUrbanStore = create((set) => ({
     set({
       filterBuildingLandUses: [],
       filterFloorLandUses: [],
+      filterDisplayMode: 'GHOST',
       numericFilters: {
         height: [null, null],
         density: [null, null],

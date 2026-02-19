@@ -1,5 +1,5 @@
 import { SlidersHorizontal } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useUrbanStore } from '../store/useUrbanStore';
 
 const LAND_USE_OPTIONS = [
@@ -55,6 +55,7 @@ const RangeControl = ({ label, metricKey, bounds, value, onChange }) => {
 };
 
 export default function FiltersSidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const buildings = useUrbanStore((state) => state.buildings);
   const filterBuildingLandUses = useUrbanStore((state) => state.filterBuildingLandUses);
   const filterFloorLandUses = useUrbanStore((state) => state.filterFloorLandUses);
@@ -62,6 +63,8 @@ export default function FiltersSidebar() {
   const setFilterBuildingLandUses = useUrbanStore((state) => state.setFilterBuildingLandUses);
   const setFilterFloorLandUses = useUrbanStore((state) => state.setFilterFloorLandUses);
   const setNumericFilterRange = useUrbanStore((state) => state.setNumericFilterRange);
+  const filterDisplayMode = useUrbanStore((state) => state.filterDisplayMode);
+  const setFilterDisplayMode = useUrbanStore((state) => state.setFilterDisplayMode);
   const resetFilters = useUrbanStore((state) => state.resetFilters);
 
   const metricBounds = useMemo(() => {
@@ -109,75 +112,108 @@ export default function FiltersSidebar() {
   };
 
   return (
-    <aside className="filters-sidebar">
-      <h3>
-        <SlidersHorizontal size={18} /> Filters
-      </h3>
-
-      <div className="field">
-        <label>Land Use (Building wise)</label>
-        <div className="filter-checklist">
-          {LAND_USE_OPTIONS.map((option) => (
-            <label key={`building-${option}`} className="filter-checkbox-row">
-              <input
-                type="checkbox"
-                checked={filterBuildingLandUses.includes(option)}
-                onChange={() => toggleFilterValue(filterBuildingLandUses, option, setFilterBuildingLandUses)}
-              />
-              <span>{option}</span>
-            </label>
-          ))}
-        </div>
+    <aside className={isCollapsed ? 'filters-sidebar collapsed' : 'filters-sidebar'}>
+      <div className="filters-sidebar-header">
+        <h3>
+          <SlidersHorizontal size={18} /> {!isCollapsed && 'Filters'}
+        </h3>
+        <button type="button" className="topbar-button" onClick={() => setIsCollapsed((value) => !value)}>
+          {isCollapsed ? 'Show' : 'Hide'}
+        </button>
       </div>
 
-      <div className="field">
-        <label>Land Use (Floor wise)</label>
-        <div className="filter-checklist">
-          {LAND_USE_OPTIONS.filter((option) => option !== 'Mixed Use').map((option) => (
-            <label key={`floor-${option}`} className="filter-checkbox-row">
-              <input
-                type="checkbox"
-                checked={filterFloorLandUses.includes(option)}
-                onChange={() => toggleFilterValue(filterFloorLandUses, option, setFilterFloorLandUses)}
-              />
-              <span>{option}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      {isCollapsed ? null : (
+        <>
+          <div className="field">
+            <label>Display Mode</label>
+            <div className="filter-checklist">
+              <label className="filter-checkbox-row">
+                <input
+                  type="radio"
+                  name="filter-display-mode"
+                  checked={filterDisplayMode === 'GHOST'}
+                  onChange={() => setFilterDisplayMode('GHOST')}
+                />
+                <span>Ghost mode</span>
+              </label>
+              <label className="filter-checkbox-row">
+                <input
+                  type="radio"
+                  name="filter-display-mode"
+                  checked={filterDisplayMode === 'OFF'}
+                  onChange={() => setFilterDisplayMode('OFF')}
+                />
+                <span>Isolation mode (ghost off)</span>
+              </label>
+            </div>
+          </div>
 
-      <RangeControl
-        label="Building Height"
-        metricKey="height"
-        bounds={metricBounds.height}
-        value={numericFilters.height}
-        onChange={setNumericFilterRange}
-      />
-      <RangeControl
-        label="Density (FAR proxy)"
-        metricKey="density"
-        bounds={metricBounds.density}
-        value={numericFilters.density}
-        onChange={setNumericFilterRange}
-      />
-      <RangeControl
-        label="Energy"
-        metricKey="energy"
-        bounds={metricBounds.energy}
-        value={numericFilters.energy}
-        onChange={setNumericFilterRange}
-      />
-      <RangeControl
-        label="Building Age"
-        metricKey="age"
-        bounds={metricBounds.age}
-        value={numericFilters.age}
-        onChange={setNumericFilterRange}
-      />
+          <div className="field">
+            <label>Land Use (Building wise)</label>
+            <div className="filter-checklist">
+              {LAND_USE_OPTIONS.map((option) => (
+                <label key={`building-${option}`} className="filter-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={filterBuildingLandUses.includes(option)}
+                    onChange={() => toggleFilterValue(filterBuildingLandUses, option, setFilterBuildingLandUses)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-      <button type="button" className="topbar-button" onClick={resetFilters}>
-        Reset Filters
-      </button>
+          <div className="field">
+            <label>Land Use (Floor wise)</label>
+            <div className="filter-checklist">
+              {LAND_USE_OPTIONS.filter((option) => option !== 'Mixed Use').map((option) => (
+                <label key={`floor-${option}`} className="filter-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={filterFloorLandUses.includes(option)}
+                    onChange={() => toggleFilterValue(filterFloorLandUses, option, setFilterFloorLandUses)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <RangeControl
+            label="Building Height"
+            metricKey="height"
+            bounds={metricBounds.height}
+            value={numericFilters.height}
+            onChange={setNumericFilterRange}
+          />
+          <RangeControl
+            label="Density (FAR proxy)"
+            metricKey="density"
+            bounds={metricBounds.density}
+            value={numericFilters.density}
+            onChange={setNumericFilterRange}
+          />
+          <RangeControl
+            label="Energy"
+            metricKey="energy"
+            bounds={metricBounds.energy}
+            value={numericFilters.energy}
+            onChange={setNumericFilterRange}
+          />
+          <RangeControl
+            label="Building Age"
+            metricKey="age"
+            bounds={metricBounds.age}
+            value={numericFilters.age}
+            onChange={setNumericFilterRange}
+          />
+
+          <button type="button" className="topbar-button" onClick={resetFilters}>
+            Reset Filters
+          </button>
+        </>
+      )}
     </aside>
   );
 }
