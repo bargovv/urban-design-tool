@@ -11,6 +11,15 @@ const METRICS = {
   'Parks and Open Spaces': { job: 0, energy: 20, water: 10, waste: 0.05, parking: 400 }
 };
 
+const LAND_USE_COLORS = {
+  Residential: '#F8E71C',
+  Commercial: '#4A90E2',
+  Industrial: '#BD10E0',
+  Public: '#D0021B',
+  'Mixed Use': '#ff9800',
+  'Parks and Open Spaces': '#22c55e'
+};
+
 
 
 const getEffectiveLandUse = (building) => {
@@ -121,10 +130,10 @@ export const calculateStats = ({ buildings, selectedIds }) => {
   data.plotArea = totalPlotArea;
   data.roadArea = totalRoadArea;
   data.privatePublicRatio = totalRoadArea > 0 ? totalPlotArea / totalRoadArea : 0;
-  data.landUse = Object.keys(typeMap).map((key, index) => ({
+  data.landUse = Object.keys(typeMap).map((key) => ({
     name: key,
     value: Math.round(typeMap[key]),
-    color: ['#F8E71C', '#4A90E2', '#BD10E0', '#D0021B', '#7ED321', '#333'][index] || '#999'
+    color: LAND_USE_COLORS[key] || '#9ca3af'
   }));
 
   return {

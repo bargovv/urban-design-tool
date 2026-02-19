@@ -181,7 +181,7 @@ export default function FiltersSidebar() {
           </div>
 
           <RangeControl
-            label="Building Height"
+            label="Building Height (m)"
             metricKey="height"
             bounds={metricBounds.height}
             value={numericFilters.height}

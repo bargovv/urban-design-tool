@@ -312,6 +312,16 @@ export const useUrbanStore = create((set) => ({
             };
           }
 
+          if (key === 'floorHeight') {
+            const nextFloorHeight = Number(value) > 0 ? Number(value) : 3;
+            const floors = Number(building.floors) || 0;
+            return {
+              ...building,
+              floorHeight: nextFloorHeight,
+              height: floors * nextFloorHeight
+            };
+          }
+
           return { ...building, [key]: value };
         })
       };

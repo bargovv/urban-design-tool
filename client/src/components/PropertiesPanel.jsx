@@ -74,6 +74,8 @@ export default function PropertiesPanel() {
   };
 
   const sharedFloors = getSharedValue('floors');
+  const sharedHeight = getSharedValue('height');
+  const sharedFloorHeight = getSharedValue('floorHeight') || 3;
   const sharedMacroLandUse = getSharedValue('macroLandUse');
   const sharedSetback = getSharedValue('setback');
   const sharedFloorWiseLandUse = getSharedValue('floorWiseLandUse');
@@ -199,15 +201,45 @@ export default function PropertiesPanel() {
             <>
               <div className="panel-highlight">{selectedBuildings.length} Building(s) Selected</div>
               <Section title="1. Macro Data">
-                <Field label="Building Height (Floors)">
+                <Field label="No. of Floors (#)">
                   <input
                     type="number"
                     className="input"
+                    min="0"
+                    step="1"
                     placeholder="2"
                     value={sharedFloors}
                     onChange={(event) => {
                       const nextValue = event.target.value;
                       updateSelection('floors', nextValue === '' ? 0 : Number(nextValue));
+                    }}
+                  />
+                </Field>
+                <Field label="Total Height (m)">
+                  <input
+                    type="number"
+                    className="input"
+                    min="0"
+                    step="0.1"
+                    placeholder="6"
+                    value={sharedHeight}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      updateSelection('height', nextValue === '' ? 0 : Number(nextValue));
+                    }}
+                  />
+                </Field>
+                <Field label="Floor-to-Floor Height (m)">
+                  <input
+                    type="number"
+                    className="input"
+                    min="0.1"
+                    step="0.1"
+                    placeholder="3"
+                    value={sharedFloorHeight}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      updateSelection('floorHeight', nextValue === '' ? 3 : Number(nextValue));
                     }}
                   />
                 </Field>
