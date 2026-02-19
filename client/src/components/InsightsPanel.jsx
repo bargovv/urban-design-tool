@@ -18,6 +18,21 @@ const KPI = ({ label, value, unit, color = '#333' }) => (
   </div>
 );
 
+const DemoHierarchyGrid = ({ stats, cityArea, plotArea, roadArea, gfaArea }) => (
+  <div className="kpi-grid kpi-grid-compact">
+    <KPI label="City Area" value={cityArea.value} unit={cityArea.unit} />
+    <KPI label="Total Plots" value={stats.selectedBreakdown?.plots ?? 0} unit="count" />
+    <KPI label="Plot Area" value={plotArea.value} unit={plotArea.unit} />
+    <KPI label="Total Buildings" value={stats.selectedBreakdown?.buildings ?? 0} unit="count" />
+    <KPI label="Road Area" value={roadArea.value} unit={roadArea.unit} />
+    <KPI label="Total GFA" value={gfaArea.value} unit={gfaArea.unit} />
+    <KPI label="Avg FAR" value={stats.far} unit="" />
+    <KPI label="Private/Public" value={stats.privatePublicRatio ? stats.privatePublicRatio.toFixed(2) : '—'} unit="ratio" />
+    <KPI label="Residents" value={Math.round(stats.residents)} unit="ppl" color="#2e7d32" />
+    <KPI label="Jobs" value={Math.round(stats.jobs)} unit="jobs" color="#1565c0" />
+  </div>
+);
+
 export default function InsightsPanel({ siteStats, selectionStats, selectedCount, analysisTab }) {
   const setAnalysisTab = useUrbanStore((state) => state.setAnalysisTab);
 
@@ -58,38 +73,16 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
       {analysisTab === 'DEMO' && (
         <>
           <div className="insights-section-title">Site level</div>
-          <div className="kpi-grid">
-            <KPI label="Total GFA" value={siteGfaArea.value} unit={siteGfaArea.unit} />
-            <KPI label="Avg FAR" value={siteStats.far} unit="" />
-            <KPI label="Residents" value={Math.round(siteStats.residents)} unit="ppl" color="#2e7d32" />
-            <KPI label="Jobs" value={Math.round(siteStats.jobs)} unit="jobs" color="#1565c0" />
-            <KPI label="Plot Area" value={sitePlotArea.value} unit={sitePlotArea.unit} />
-            <KPI label="Road Area" value={siteRoadArea.value} unit={siteRoadArea.unit} />
-            <KPI label="City Area" value={siteCityArea.value} unit={siteCityArea.unit} />
-            <KPI label="Built-up Area" value={siteGfaArea.value} unit={siteGfaArea.unit} />
-            <KPI
-              label="Private/Public"
-              value={siteStats.privatePublicRatio ? siteStats.privatePublicRatio.toFixed(2) : '—'}
-              unit="ratio"
-            />
-          </div>
+          <DemoHierarchyGrid stats={siteStats} cityArea={siteCityArea} plotArea={sitePlotArea} roadArea={siteRoadArea} gfaArea={siteGfaArea} />
 
           <div className="insights-section-title">Selection level</div>
-          <div className="kpi-grid">
-            <KPI label="Total GFA" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
-            <KPI label="Avg FAR" value={selectedStats.far} unit="" />
-            <KPI label="Residents" value={Math.round(selectedStats.residents)} unit="ppl" color="#2e7d32" />
-            <KPI label="Jobs" value={Math.round(selectedStats.jobs)} unit="jobs" color="#1565c0" />
-            <KPI label="Plot Area" value={selectedPlotArea.value} unit={selectedPlotArea.unit} />
-            <KPI label="Road Area" value={selectedRoadArea.value} unit={selectedRoadArea.unit} />
-            <KPI label="City Area" value={selectedCityArea.value} unit={selectedCityArea.unit} />
-            <KPI label="Built-up Area" value={selectedGfaArea.value} unit={selectedGfaArea.unit} />
-            <KPI
-              label="Private/Public"
-              value={selectedStats.privatePublicRatio ? selectedStats.privatePublicRatio.toFixed(2) : '—'}
-              unit="ratio"
-            />
-          </div>
+          <DemoHierarchyGrid
+            stats={selectedStats}
+            cityArea={selectedCityArea}
+            plotArea={selectedPlotArea}
+            roadArea={selectedRoadArea}
+            gfaArea={selectedGfaArea}
+          />
           <div className="chart-card">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

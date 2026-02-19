@@ -414,6 +414,26 @@ body {
   margin-bottom: 20px;
 }
 
+.kpi-grid-compact {
+  gap: 8px;
+}
+
+.kpi-grid-compact .kpi {
+  padding: 8px;
+}
+
+.kpi-grid-compact .kpi-label {
+  font-size: 0.58rem;
+}
+
+.kpi-grid-compact .kpi-value {
+  font-size: 0.95rem;
+}
+
+.kpi-grid-compact .kpi-value span {
+  font-size: 0.62rem;
+}
+
 .kpi {
   background: white;
   padding: 12px;
