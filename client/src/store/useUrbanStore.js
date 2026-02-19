@@ -93,8 +93,8 @@ export const useUrbanStore = create((set) => ({
   viewMode: 'ISO',
   analysisTab: 'DEMO',
   colorMode: 'BUILDING_USE',
-  filterBuildingLandUse: 'ALL',
-  filterFloorLandUse: 'ALL',
+  filterBuildingLandUses: [],
+  filterFloorLandUses: [],
   numericFilters: {
     height: [null, null],
     density: [null, null],
@@ -107,8 +107,8 @@ export const useUrbanStore = create((set) => ({
   setViewMode: (viewMode) => set({ viewMode }),
   setAnalysisTab: (analysisTab) => set({ analysisTab }),
   setColorMode: (colorMode) => set({ colorMode }),
-  setFilterBuildingLandUse: (filterBuildingLandUse) => set({ filterBuildingLandUse }),
-  setFilterFloorLandUse: (filterFloorLandUse) => set({ filterFloorLandUse }),
+  setFilterBuildingLandUses: (filterBuildingLandUses) => set({ filterBuildingLandUses }),
+  setFilterFloorLandUses: (filterFloorLandUses) => set({ filterFloorLandUses }),
   setNumericFilterRange: (metricKey, range) =>
     set((state) => ({
       numericFilters: {
@@ -118,8 +118,8 @@ export const useUrbanStore = create((set) => ({
     })),
   resetFilters: () =>
     set({
-      filterBuildingLandUse: 'ALL',
-      filterFloorLandUse: 'ALL',
+      filterBuildingLandUses: [],
+      filterFloorLandUses: [],
       numericFilters: {
         height: [null, null],
         density: [null, null],
@@ -329,7 +329,8 @@ export const useUrbanStore = create((set) => ({
         return normalizeBuildingEntity({
           id: createId(),
           type: 'Building',
-          layer: 'GENERATED',
+          layer: 'BUILDINGS',
+          originalShape: (shape || []).map(([x, y]) => ({ x, y })),
           shape,
           areaSqm: plot.areaSqm ?? 0,
           floors,

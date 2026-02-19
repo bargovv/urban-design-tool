@@ -131,6 +131,25 @@ body {
   background: #fafafa;
 }
 
+.filter-checklist {
+  display: grid;
+  gap: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px;
+  background: #fff;
+}
+
+.filter-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #374151;
+}
+
 .filter-range-header {
   display: flex;
   justify-content: space-between;

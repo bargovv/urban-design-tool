@@ -136,8 +136,8 @@ const EntityMesh = ({
   buildings,
   onBlockSelect,
   colorMode,
-  filterBuildingLandUse,
-  filterFloorLandUse,
+  filterBuildingLandUses,
+  filterFloorLandUses,
   numericFilters
 }) => {
   const isRoad = data.type === 'Road';
@@ -151,9 +151,9 @@ const EntityMesh = ({
       buildings.some((item) => item.type === 'Building' && item.plotId === data.id && item.landUseExisting === 'Parks and Open Spaces'));
 
   const isBuildingLandUseMatch =
-    filterBuildingLandUse === 'ALL' ||
+    filterBuildingLandUses.length === 0 ||
     !isBuilding ||
-    data.landUseExisting === filterBuildingLandUse;
+    filterBuildingLandUses.includes(data.landUseExisting);
 
   const isNumericMatch =
     !isBuilding ||
@@ -162,8 +162,8 @@ const EntityMesh = ({
       inRange(getEnergyValue(data), numericFilters.energy) &&
       inRange(Number(data.buildingAge) || 0, numericFilters.age));
 
-  const hasFloorLandUseFilter = filterFloorLandUse !== 'ALL';
-  const hasBuildingLandUseFilter = filterBuildingLandUse !== 'ALL';
+  const hasFloorLandUseFilter = filterFloorLandUses.length > 0;
+  const hasBuildingLandUseFilter = filterBuildingLandUses.length > 0;
   const hasNumericFilter = Object.values(numericFilters).some(([min, max]) => min != null || max != null);
   const hasAnyFilter = hasBuildingLandUseFilter || hasFloorLandUseFilter || hasNumericFilter;
 
@@ -284,7 +284,7 @@ const EntityMesh = ({
               data.microUses?.find((item) => Number(item?.floor) === index + 1)?.landUse ||
               (data.landUseExisting === 'Mixed Use' ? 'Residential' : data.landUseExisting);
             const floorColor = colorMode === 'FLOOR_USE' ? getLandUseColor(floorLandUse) : baseColor;
-            const isFloorLandUseMatch = filterFloorLandUse === 'ALL' || floorLandUse === filterFloorLandUse;
+            const isFloorLandUseMatch = filterFloorLandUses.length === 0 || filterFloorLandUses.includes(floorLandUse);
             const isVisibleByFilter = isBuildingLandUseMatch && isFloorLandUseMatch && isNumericMatch;
             const ghostOpacity = hasAnyFilter && !isVisibleByFilter ? 0.12 : 1;
 
@@ -351,8 +351,8 @@ export default function Viewer3D({
   selectionFilter,
   onBlockSelect,
   colorMode,
-  filterBuildingLandUse,
-  filterFloorLandUse,
+  filterBuildingLandUses,
+  filterFloorLandUses,
   numericFilters
 }) {
   return (
@@ -383,8 +383,8 @@ export default function Viewer3D({
             buildings={buildings}
             onBlockSelect={onBlockSelect}
             colorMode={colorMode}
-            filterBuildingLandUse={filterBuildingLandUse}
-            filterFloorLandUse={filterFloorLandUse}
+            filterBuildingLandUses={filterBuildingLandUses}
+            filterFloorLandUses={filterFloorLandUses}
             numericFilters={numericFilters}
           />
         ))}

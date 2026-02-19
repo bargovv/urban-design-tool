@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useUrbanStore } from '../store/useUrbanStore';
 
 const LAND_USE_OPTIONS = [
-  'ALL',
   'Residential',
   'Commercial',
   'Industrial',
@@ -57,11 +56,11 @@ const RangeControl = ({ label, metricKey, bounds, value, onChange }) => {
 
 export default function FiltersSidebar() {
   const buildings = useUrbanStore((state) => state.buildings);
-  const filterBuildingLandUse = useUrbanStore((state) => state.filterBuildingLandUse);
-  const filterFloorLandUse = useUrbanStore((state) => state.filterFloorLandUse);
+  const filterBuildingLandUses = useUrbanStore((state) => state.filterBuildingLandUses);
+  const filterFloorLandUses = useUrbanStore((state) => state.filterFloorLandUses);
   const numericFilters = useUrbanStore((state) => state.numericFilters);
-  const setFilterBuildingLandUse = useUrbanStore((state) => state.setFilterBuildingLandUse);
-  const setFilterFloorLandUse = useUrbanStore((state) => state.setFilterFloorLandUse);
+  const setFilterBuildingLandUses = useUrbanStore((state) => state.setFilterBuildingLandUses);
+  const setFilterFloorLandUses = useUrbanStore((state) => state.setFilterFloorLandUses);
   const setNumericFilterRange = useUrbanStore((state) => state.setNumericFilterRange);
   const resetFilters = useUrbanStore((state) => state.resetFilters);
 
@@ -101,6 +100,14 @@ export default function FiltersSidebar() {
     };
   }, [buildings]);
 
+  const toggleFilterValue = (currentValues, value, setter) => {
+    if (currentValues.includes(value)) {
+      setter(currentValues.filter((item) => item !== value));
+      return;
+    }
+    setter([...currentValues, value]);
+  };
+
   return (
     <aside className="filters-sidebar">
       <h3>
@@ -109,24 +116,34 @@ export default function FiltersSidebar() {
 
       <div className="field">
         <label>Land Use (Building wise)</label>
-        <select className="input" value={filterBuildingLandUse} onChange={(event) => setFilterBuildingLandUse(event.target.value)}>
+        <div className="filter-checklist">
           {LAND_USE_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option === 'ALL' ? 'All' : option}
-            </option>
+            <label key={`building-${option}`} className="filter-checkbox-row">
+              <input
+                type="checkbox"
+                checked={filterBuildingLandUses.includes(option)}
+                onChange={() => toggleFilterValue(filterBuildingLandUses, option, setFilterBuildingLandUses)}
+              />
+              <span>{option}</span>
+            </label>
           ))}
-        </select>
+        </div>
       </div>
 
       <div className="field">
         <label>Land Use (Floor wise)</label>
-        <select className="input" value={filterFloorLandUse} onChange={(event) => setFilterFloorLandUse(event.target.value)}>
+        <div className="filter-checklist">
           {LAND_USE_OPTIONS.filter((option) => option !== 'Mixed Use').map((option) => (
-            <option key={option} value={option}>
-              {option === 'ALL' ? 'All' : option}
-            </option>
+            <label key={`floor-${option}`} className="filter-checkbox-row">
+              <input
+                type="checkbox"
+                checked={filterFloorLandUses.includes(option)}
+                onChange={() => toggleFilterValue(filterFloorLandUses, option, setFilterFloorLandUses)}
+              />
+              <span>{option}</span>
+            </label>
           ))}
-        </select>
+        </div>
       </div>
 
       <RangeControl
