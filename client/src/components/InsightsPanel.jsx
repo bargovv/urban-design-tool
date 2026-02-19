@@ -47,6 +47,7 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
   const selectedPlotArea = formatArea(selectedStats.plotArea);
   const selectedRoadArea = formatArea(selectedStats.roadArea);
   const selectedCityArea = formatArea(selectedStats.plotArea + selectedStats.roadArea);
+  const occupiedPlotFarDetails = (selectedStats.selectedPlotDetails || []).filter((plot) => !plot.isEmptyPlot);
 
   return (
     <div className="panel insights">
@@ -97,10 +98,12 @@ export default function InsightsPanel({ siteStats, selectionStats, selectedCount
             </ResponsiveContainer>
           </div>
 
-          {selectedCount > 0 && selectedStats.selectedPlotDetails?.length > 0 && (
+          {occupiedPlotFarDetails.length > 0 && (
             <div className="plot-far-list">
-              <div className="insights-section-title">Selected plots: FAR details</div>
-              {selectedStats.selectedPlotDetails.map((plot) => {
+              <div className="insights-section-title">
+                {selectedCount > 0 ? 'Selected occupied plots: FAR details' : 'Occupied plots: FAR details'}
+              </div>
+              {occupiedPlotFarDetails.map((plot) => {
                 const plotArea = formatArea(plot.areaSqm);
                 const gfa = formatArea(plot.buildingGfa);
                 return (

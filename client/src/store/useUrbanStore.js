@@ -22,6 +22,19 @@ const resolveMacroLandUse = (microUses, fallbackUse = 'Residential') => {
   return fallbackUse;
 };
 
+const getEffectiveFloorLandUses = (building) => {
+  const totalFloors = Math.max(0, Number(building?.floors) || 0);
+  const fallbackUse = building?.macroLandUse || building?.landUseExisting || 'Residential';
+  const floorUses = [];
+
+  for (let floorIndex = 1; floorIndex <= totalFloors; floorIndex += 1) {
+    const explicitUse = building?.microUses?.find((item) => Number(item?.floor) === floorIndex)?.landUse;
+    floorUses.push({ floor: floorIndex, landUse: explicitUse || fallbackUse });
+  }
+
+  return floorUses;
+};
+
 const normalizeBuildingEntity = (entity) => {
   if (!entity || entity.type !== 'Building') return entity;
 
@@ -179,7 +192,8 @@ export const useUrbanStore = create((set) => ({
           const floorsSet = selectedFloorTargets[building.id];
           if (!floorsSet) return building;
 
-          const nextMicroUses = Array.isArray(building.microUses) ? [...building.microUses] : [];
+          const fullFloorUses = getEffectiveFloorLandUses(building);
+          const nextMicroUses = fullFloorUses.length > 0 ? [...fullFloorUses] : Array.isArray(building.microUses) ? [...building.microUses] : [];
 
           floorsSet.forEach((floorIndex) => {
             const existingIndex = nextMicroUses.findIndex((item) => Number(item?.floor) === floorIndex);
